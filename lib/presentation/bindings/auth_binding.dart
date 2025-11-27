@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import '../controllers/auth/auth_controller.dart';
+import '../controllers/auth/signin_controller.dart';
+import '../controllers/auth/signup_controller.dart';
 import '../../domain/services/chat_service.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/chat_repository.dart';
@@ -18,6 +20,8 @@ class AuthBinding extends Bindings {
     
     // Register controllers
     Get.lazyPut(() => AuthController());
+    Get.lazyPut(() => SigninController());
+    Get.lazyPut(() => SignupController());
   }
 }
 

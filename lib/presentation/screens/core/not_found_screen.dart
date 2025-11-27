@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Not Found View
+/// Not Found Screen
 /// Displayed when navigating to an unknown route
-class NotFoundView extends StatelessWidget {
-  const NotFoundView({super.key});
+class NotFoundScreen extends StatelessWidget {
+  const NotFoundScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
