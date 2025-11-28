@@ -36,11 +36,12 @@ class SignupController extends BaseController {
 
   /// Validate entire form
   void _validateForm() {
-    final fullnameValid = validateFullname(fullnameController.text) == null;
-    final emailValid = validateEmail(emailController.text) == null;
-    final passwordValid = validatePassword(passwordController.text) == null;
+    // Check if all fields are filled (not empty)
+    final fullnameFilled = fullnameController.text.trim().isNotEmpty;
+    final emailFilled = emailController.text.trim().isNotEmpty;
+    final passwordFilled = passwordController.text.isNotEmpty;
     
-    isFormValid.value = fullnameValid && emailValid && passwordValid && isAgeVerified.value;
+    isFormValid.value = fullnameFilled && emailFilled && passwordFilled && isAgeVerified.value;
   }
 
   /// Validate fullname

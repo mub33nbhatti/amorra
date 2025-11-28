@@ -58,4 +58,9 @@ class AppTexts {
   static const String onboarding3Title = "You're Never Alone";
   static const String onboarding3Subtitle =
       "Experience genuine companionship that brings warmth, understanding, and connection to your life.";
+
+  // Onboarding Actions
+  static const String skip = "Skip";
+  static const String next = "Next";
+  static const String getStarted = "Get Started";
 }

@@ -29,10 +29,11 @@ class SigninController extends BaseController {
 
   /// Validate entire form
   void _validateForm() {
-    final emailValid = validateEmail(emailController.text) == null;
-    final passwordValid = validatePassword(passwordController.text) == null;
+    // Check if all fields are filled (not empty)
+    final emailFilled = emailController.text.trim().isNotEmpty;
+    final passwordFilled = passwordController.text.isNotEmpty;
     
-    isFormValid.value = emailValid && passwordValid;
+    isFormValid.value = emailFilled && passwordFilled;
   }
 
   /// Validate email

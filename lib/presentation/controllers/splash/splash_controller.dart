@@ -29,9 +29,9 @@ class SplashController extends BaseController {
   /// Navigate to next screen after delay
   void _navigateToNext() {
     Timer(const Duration(seconds: 3), () {
-      // TODO: Check if user is authenticated
-      // For now, navigate to signin
-      Get.offAllNamed(AppRoutes.welcome);
+      // TODO: Check if user is authenticated or has seen onboarding
+      // For now, navigate to onboarding
+      Get.offAllNamed(AppRoutes.onboarding);
     });
   }
 }
