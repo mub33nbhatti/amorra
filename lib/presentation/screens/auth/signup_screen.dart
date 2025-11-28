@@ -11,6 +11,7 @@ import '../../controllers/auth/signup_controller.dart';
 import '../../widgets/common/app_text_field.dart';
 import '../../widgets/common/app_large_button.dart';
 import '../../widgets/common/app_checkbox.dart';
+import '../../widgets/common/app_social_button.dart';
 import '../../../core/config/routes.dart';
 
 /// Sign Up Screen
@@ -30,17 +31,17 @@ class SignupScreen extends GetView<SignupController> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: Form(
+            key: controller.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Logo
-              Center(
-                child: Image.asset(
-                  AppImages.splashLogo,
-                  width: AppResponsive.screenWidth(context) * 0.35,
-                  height: AppResponsive.screenWidth(context) * 0.35,
-                  fit: BoxFit.contain,
-                ),
+              Image.asset(
+                AppImages.splashLogo,
+                width: AppResponsive.screenWidth(context) * 0.35,
+                height: AppResponsive.screenWidth(context) * 0.35,
+                fit: BoxFit.contain,
               ),
 
               // Title
@@ -132,6 +133,36 @@ class SignupScreen extends GetView<SignupController> {
               ),
               AppSpacing.vertical(context, 0.04),
 
+              // Divider with "Or continue with"
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: AppColors.lightGrey, thickness: 1),
+                  ),
+                  Padding(
+                    padding: AppSpacing.symmetric(context, h: 0.02, v: 0),
+                    child: Text(
+                      AppTexts.orContinueWith,
+                      style: AppTextStyles.bodyText(
+                        context,
+                      ).copyWith(color: AppColors.grey),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: AppColors.lightGrey, thickness: 1),
+                  ),
+                ],
+              ),
+              AppSpacing.vertical(context, 0.04),
+
+              // Google Sign Up Button
+              AppSocialButton(
+                text: AppTexts.continueWithGoogle,
+                imagePath: AppImages.googleLogo,
+                onPressed: controller.signUpWithGoogle,
+              ),
+              AppSpacing.vertical(context, 0.04),
+
               // Terms & Privacy
               Center(
                 child: RichText(
@@ -211,7 +242,8 @@ class SignupScreen extends GetView<SignupController> {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

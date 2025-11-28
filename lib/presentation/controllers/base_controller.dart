@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
+import '../../presentation/widgets/common/app_snackbar.dart';
 
 /// Base Controller
 /// Base class for all controllers with common functionality
@@ -27,22 +28,34 @@ abstract class BaseController extends GetxController {
   }
 
   /// Show error snackbar
-  void showError(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 3),
+  void showError(String message, {String? title, String? subtitle}) {
+    AppSnackbar.showError(
+      title: title ?? 'Error',
+      subtitle: subtitle ?? message,
     );
   }
 
   /// Show success snackbar
-  void showSuccess(String message) {
-    Get.snackbar(
-      'Success',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
+  void showSuccess(String message, {String? title, String? subtitle}) {
+    AppSnackbar.showSuccess(
+      title: title ?? 'Success',
+      subtitle: subtitle ?? message,
+    );
+  }
+
+  /// Show info snackbar
+  void showInfo(String message, {String? title, String? subtitle}) {
+    AppSnackbar.showInfo(
+      title: title ?? 'Info',
+      subtitle: subtitle ?? message,
+    );
+  }
+
+  /// Show warning snackbar
+  void showWarning(String message, {String? title, String? subtitle}) {
+    AppSnackbar.showWarning(
+      title: title ?? 'Warning',
+      subtitle: subtitle ?? message,
     );
   }
 

@@ -3,17 +3,72 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users Collection
+    // Users can read their own data and create/update their own profile
+    // Only authenticated users can read other users' basic info (for display purposes)
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if isOwner(userId);
+      
+      // Users can create their own document during signup
+      allow create: if isAuthenticated() 
+        && request.auth.uid == userId
+        && request.resource.data.id == userId
+        && request.resource.data.keys().hasAll(['id', 'name', 'createdAt']);
+      
+      // Users can update their own document
+      allow update: if isOwner(userId)
+        && request.resource.data.id == userId; // Prevent ID changes
+      
+      // Users cannot delete their own account (handle via admin/cloud function)
+      allow delete: if false;
+    }
+
+    // Messages Collection
+    // Users can only read/write their own messages
+    match /messages/{messageId} {
+      allow read, write: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid 
+            || request.resource.data.userId == request.auth.uid);
+    }
+
+    // Chat Sessions Collection
+    // Users can only access their own chat sessions
+    match /chat_sessions/{sessionId} {
+      allow read, write: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid 
+            || request.resource.data.userId == request.auth.uid);
+    }
+
+    // Subscriptions Collection
+    // Users can only read/write their own subscriptions
+    match /subscriptions/{subscriptionId} {
+      allow read, write: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid 
+            || request.resource.data.userId == request.auth.uid);
+    }
+
+    // User Preferences Collection
+    // Users can only access their own preferences
+    match /user_preferences/{preferenceId} {
+      allow read, write: if isAuthenticated() 
+        && (resource.data.userId == request.auth.uid 
+            || request.resource.data.userId == request.auth.uid);
+    }
+
+    // Deny all other access
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 12, 25);
+      allow read, write: if false;
     }
   }
 }

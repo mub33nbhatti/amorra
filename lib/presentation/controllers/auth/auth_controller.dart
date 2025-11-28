@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../core/utils/firebase_error_handler.dart';
 import '../base_controller.dart';
 
 /// Auth Controller
@@ -48,12 +49,13 @@ class AuthController extends BaseController {
 
       currentUser.value = user;
       isAuthenticated.value = true;
-      showSuccess('Welcome back!');
+      showSuccess('Welcome back!', subtitle: 'Great to see you again. Let\'s continue where you left off!');
 
       return true;
     } catch (e) {
       setError(e.toString());
-      showError('Sign in failed: ${e.toString()}');
+      final errorInfo = FirebaseErrorHandler.parseError(e);
+      showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
       return false;
     } finally {
       setLoading(false);
@@ -78,12 +80,13 @@ class AuthController extends BaseController {
 
       currentUser.value = user;
       isAuthenticated.value = true;
-      showSuccess('Account created successfully!');
+      showSuccess('Account Created!', subtitle: 'Welcome to Amorra! Your account has been created successfully.');
 
       return true;
     } catch (e) {
       setError(e.toString());
-      showError('Sign up failed: ${e.toString()}');
+      final errorInfo = FirebaseErrorHandler.parseError(e);
+      showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
       return false;
     } finally {
       setLoading(false);
@@ -97,10 +100,11 @@ class AuthController extends BaseController {
       await _authRepository.signOut();
       currentUser.value = null;
       isAuthenticated.value = false;
-      showSuccess('Signed out successfully');
+      showSuccess('Signed Out', subtitle: 'You\'ve been successfully signed out. See you soon!');
     } catch (e) {
       setError(e.toString());
-      showError('Sign out failed: ${e.toString()}');
+      final errorInfo = FirebaseErrorHandler.parseError(e);
+      showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
     } finally {
       setLoading(false);
     }
@@ -112,10 +116,11 @@ class AuthController extends BaseController {
       setLoading(true);
       await _authRepository.updateUser(user);
       currentUser.value = user;
-      showSuccess('Profile updated successfully');
+      showSuccess('Profile Updated', subtitle: 'Your profile has been updated successfully!');
     } catch (e) {
       setError(e.toString());
-      showError('Update failed: ${e.toString()}');
+      final errorInfo = FirebaseErrorHandler.parseError(e);
+      showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
     } finally {
       setLoading(false);
     }

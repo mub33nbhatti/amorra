@@ -62,12 +62,12 @@ class SubscriptionController extends BaseController {
       setLoading(true);
       // TODO: Implement Stripe checkout
       // await _stripeService.createSubscription(...);
-      showSuccess(AppConstants.successSubscriptionActive);
+      showSuccess('Subscription Activated!', subtitle: 'Congratulations! Your subscription is now active. Enjoy unlimited access!');
       isSubscribed.value = true;
       return true;
     } catch (e) {
       setError(e.toString());
-      showError(AppConstants.errorSubscription);
+      showError('Subscription Failed', subtitle: 'We couldn\'t process your subscription. Please try again or contact support.');
       return false;
     } finally {
       setLoading(false);

@@ -2,11 +2,19 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../base_controller.dart';
 import '../../../core/utils/validators.dart';
+import '../../../core/utils/firebase_error_handler.dart';
 import '../../../core/config/routes.dart' as routes;
+import '../../../data/repositories/auth_repository.dart';
 
 /// Sign Up Controller
 /// Handles sign up form logic and validation
 class SignupController extends BaseController {
+  // Repository
+  final AuthRepository _authRepository = AuthRepository();
+
+  // Form key
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
   // Form controllers
   final fullnameController = TextEditingController();
   final emailController = TextEditingController();
@@ -74,32 +82,52 @@ class SignupController extends BaseController {
   /// Sign up user
   Future<void> signUp() async {
     if (!isFormValid.value) {
-      showError('Please fill all fields correctly');
+      showError('Oops! Something\'s missing', subtitle: 'Please fill in all fields to create your account');
       return;
     }
 
     if (!isAgeVerified.value) {
-      showError('You must be 18 years or older to register');
+      showError('Age Verification Required', subtitle: 'You must be 18 years or older to create an account');
       return;
     }
 
     try {
       setLoading(true);
       
-      // TODO: Implement actual sign up logic
-      // await _authRepository.signUpWithEmailAndPassword(
-      //   email: emailController.text.trim(),
-      //   password: passwordController.text,
-      //   name: fullnameController.text.trim(),
-      // );
+      await _authRepository.signUpWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        name: fullnameController.text.trim(),
+      );
 
-      showSuccess('Account created successfully!');
+      showSuccess('Account Created!', subtitle: 'Welcome to Amorra! Your account has been created successfully.');
       
       // Navigate to main navigation screen
       Get.offAllNamed(routes.AppRoutes.mainNavigation);
       
     } catch (e) {
-      showError(e.toString());
+      final errorInfo = FirebaseErrorHandler.parseError(e);
+      showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /// Sign up with Google
+  Future<void> signUpWithGoogle() async {
+    try {
+      setLoading(true);
+      
+      await _authRepository.signInWithGoogle();
+
+      showSuccess('Welcome to Amorra!', subtitle: 'Your account has been created with Google. Let\'s get started!');
+      
+      // Navigate to main navigation screen
+      Get.offAllNamed(routes.AppRoutes.mainNavigation);
+      
+    } catch (e) {
+      final errorInfo = FirebaseErrorHandler.parseError(e);
+      showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
     } finally {
       setLoading(false);
     }

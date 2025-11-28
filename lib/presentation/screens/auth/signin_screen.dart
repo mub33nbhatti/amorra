@@ -30,9 +30,11 @@ class SigninScreen extends GetView<SigninController> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: Form(
+            key: controller.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Logo
               Image.asset(
                 AppImages.splashLogo,
@@ -168,7 +170,8 @@ class SigninScreen extends GetView<SigninController> {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

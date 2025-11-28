@@ -12,7 +12,20 @@
           "package_name": "com.example.amorra"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "918972972138-dt4nqhdcdet43updu0r4fj2bbpsbt31e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amorra",
+            "certificate_hash": "135931b2353259d75a7af3853322cb4f7b5ff4f2"
+          }
+        },
+        {
+          "client_id": "918972972138-c5pdm4abhamveccr54f4ld65kup9unmg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA_F7mkrFBglandbPoCWTbxbiDZ3Tsob34"
@@ -20,26 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:918972972138:android:a25e6906c55be93a325e13",
-        "android_client_info": {
-          "package_name": "com.mycompany.amorra"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyA_F7mkrFBglandbPoCWTbxbiDZ3Tsob34"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "918972972138-c5pdm4abhamveccr54f4ld65kup9unmg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "918972972138-5af0u61hiponfhpbsjblgluvkm6bv68d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.amorra"
+              }
+            }
+          ]
         }
       }
     }

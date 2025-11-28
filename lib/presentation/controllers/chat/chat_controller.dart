@@ -59,7 +59,7 @@ class ChatController extends BaseController {
   /// Send message
   Future<void> sendMessage(String message) async {
     if (userId == null) {
-      showError('Please sign in to send messages');
+      showError('Sign In Required', subtitle: 'Please sign in to start chatting and send messages.');
       return;
     }
 
@@ -83,7 +83,7 @@ class ChatController extends BaseController {
       // Typing indicator will be handled by stream update
     } catch (e) {
       setError(e.toString());
-      showError('Failed to send message: ${e.toString()}');
+      showError('Message Failed', subtitle: 'We couldn\'t send your message. Please check your connection and try again.');
     } finally {
       isTyping.value = false;
     }

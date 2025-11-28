@@ -28,7 +28,7 @@ class AgeVerificationController extends BaseController {
     try {
       if (userAge < AppConstants.minimumAge) {
         setError(AppConstants.errorAgeVerification);
-        showError(AppConstants.errorAgeVerification);
+        showError('Age Verification Required', subtitle: 'You must be 18 years or older to use this app. Please verify your age.');
         return false;
       }
 
@@ -39,11 +39,11 @@ class AgeVerificationController extends BaseController {
       await _storage.write(AppConstants.storageKeyAgeVerified, true);
       await _storage.write('user_age', userAge);
 
-      showSuccess(AppConstants.successAgeVerified);
+      showSuccess('Age Verified!', subtitle: 'Thank you for verifying your age. You\'re all set to continue!');
       return true;
     } catch (e) {
       setError(e.toString());
-      showError('Verification failed: ${e.toString()}');
+      showError('Verification Failed', subtitle: 'We couldn\'t verify your age. Please try again.');
       return false;
     }
   }

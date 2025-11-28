@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
 import '../../core/constants/app_constants.dart';
@@ -148,10 +150,78 @@ class AuthRepository {
   /// Sign out
   Future<void> signOut() async {
     try {
+      // Sign out from Firebase
       await _firebaseService.signOut();
+      
+      // Also sign out from Google Sign-In if user was signed in with Google
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      await googleSignIn.signOut();
     } catch (e) {
       if (kDebugMode) {
         print('Sign out error: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Sign in with Google
+  Future<UserModel> signInWithGoogle() async {
+    try {
+      // Initialize Google Sign In
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // User canceled the sign-in
+        throw Exception('Google sign-in was canceled');
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final userCredential =
+          await _firebaseService.auth.signInWithCredential(credential);
+
+      if (userCredential.user == null) {
+        throw Exception('Google sign-in failed: User is null');
+      }
+
+      // Get user data from Firestore
+      final userDoc = await _firebaseService
+          .collection(AppConstants.collectionUsers)
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>?;
+        return UserModel.fromJson({
+          'id': userCredential.user!.uid,
+          ...?userData,
+        });
+      } else {
+        // Create user document if it doesn't exist
+        final userModel = UserModel(
+          id: userCredential.user!.uid,
+          email: userCredential.user!.email,
+          name: userCredential.user!.displayName ?? googleUser.displayName ?? '',
+          createdAt: DateTime.now(),
+        );
+        await createUser(userModel);
+        return userModel;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Google sign in error: $e');
       }
       rethrow;
     }
