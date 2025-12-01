@@ -56,6 +56,12 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
             // If keystore file doesn't exist, it will use debug signing (default)
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

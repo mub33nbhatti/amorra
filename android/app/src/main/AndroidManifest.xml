@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internet permission required for Firebase Authentication and Google Sign-In -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Network state permission (optional but recommended for better network handling) -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    
     <application
         android:label="amorra"
         android:name="${applicationName}"

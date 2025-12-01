@@ -11,17 +11,21 @@ import '../../data/repositories/chat_repository.dart';
 class AuthBinding extends Bindings {
   @override
   void dependencies() {
-    // Register repositories
-    Get.lazyPut(() => AuthRepository());
-    
-    // Register services
-    Get.lazyPut(() => ChatRepository());
-    Get.lazyPut(() => ChatService());
-    
-    // Register controllers
+    // Register AuthRepository as singleton with fenix
+    // This ensures the same instance is reused across signin/signup
+    // and the pending Google credential persists
+    if (!Get.isRegistered<AuthRepository>()) {
+      Get.put(AuthRepository(), permanent: true);
+    }
+
+    // Register other repositories/services
+    Get.lazyPut(() => ChatRepository(), fenix: true);
+    Get.lazyPut(() => ChatService(), fenix: true);
+
+    // Register controllers - NO fenix for controllers
+    // This allows proper disposal and cleanup
     Get.lazyPut(() => AuthController());
     Get.lazyPut(() => SigninController());
     Get.lazyPut(() => SignupController());
   }
 }
-

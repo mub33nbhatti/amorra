@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import '../../../data/models/subscription_model.dart';
 import '../../../core/config/app_config.dart';
-import '../../../core/constants/app_constants.dart';
 import '../base_controller.dart';
 
 /// Subscription Controller

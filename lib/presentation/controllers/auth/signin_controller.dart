@@ -9,10 +9,10 @@ import '../../../data/repositories/auth_repository.dart';
 /// Sign In Controller
 /// Handles sign in form logic and validation
 class SigninController extends BaseController {
-  // Repository
-  final AuthRepository _authRepository = AuthRepository();
+  // Repository - use Get.find to reuse existing instance
+  AuthRepository get _authRepository => Get.find<AuthRepository>();
 
-  // Form key
+  // Form key - unique instance
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   // Form controllers
@@ -23,9 +23,17 @@ class SigninController extends BaseController {
   final RxBool isPasswordVisible = false.obs;
   final RxBool isFormValid = false.obs;
 
+  // Track if disposed
+  bool _isDisposed = false;
+
+  // Track if currently navigating
+  bool _isNavigating = false;
+
   @override
   void onInit() {
     super.onInit();
+    _isDisposed = false;
+    _isNavigating = false;
     _setupValidation();
   }
 
@@ -37,10 +45,11 @@ class SigninController extends BaseController {
 
   /// Validate entire form
   void _validateForm() {
-    // Check if all fields are filled (not empty)
+    if (_isDisposed) return;
+
     final emailFilled = emailController.text.trim().isNotEmpty;
     final passwordFilled = passwordController.text.isNotEmpty;
-    
+
     isFormValid.value = emailFilled && passwordFilled;
   }
 
@@ -56,68 +65,135 @@ class SigninController extends BaseController {
 
   /// Toggle password visibility
   void togglePasswordVisibility() {
+    if (_isDisposed) return;
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
   /// Sign in user
   Future<void> signIn() async {
+    if (_isDisposed || _isNavigating) return;
+
     if (!isFormValid.value) {
-      showError('Oops! Something\'s missing', subtitle: 'Please fill in all fields to continue');
+      showError('Oops! Something\'s missing',
+          subtitle: 'Please fill in all fields to continue');
       return;
     }
 
     try {
       setLoading(true);
-      
+
+      // Unfocus to dismiss keyboard
+      FocusManager.instance.primaryFocus?.unfocus();
+
       await _authRepository.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      showSuccess('Welcome back!', subtitle: 'You\'ve successfully signed in. Let\'s get started!');
-      
-      // Navigate to main navigation screen
-      Get.offAllNamed(routes.AppRoutes.mainNavigation);
-      
+      if (_isDisposed || _isNavigating) return;
+
+      showSuccess('Welcome back!',
+          subtitle: 'You\'ve successfully signed in. Let\'s get started!');
+
+      _isNavigating = true;
+
+      // Wait for UI to settle
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (!_isDisposed) {
+        Get.offAllNamed(routes.AppRoutes.mainNavigation);
+      }
+
     } catch (e) {
+      if (_isDisposed) return;
       final errorInfo = FirebaseErrorHandler.parseError(e);
       showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
+      _isNavigating = false;
     } finally {
-      setLoading(false);
+      if (!_isDisposed) {
+        setLoading(false);
+      }
     }
   }
 
   /// Sign in with Google
   Future<void> signInWithGoogle() async {
+    if (_isDisposed || _isNavigating) return;
+
     try {
       setLoading(true);
-      
+
+      // Unfocus to dismiss keyboard
+      FocusManager.instance.primaryFocus?.unfocus();
+
       await _authRepository.signInWithGoogle();
 
-      showSuccess('Welcome!', subtitle: 'You\'ve successfully signed in with Google. Enjoy your experience!');
-      
-      // Navigate to main navigation screen
-      Get.offAllNamed(routes.AppRoutes.mainNavigation);
-      
+      if (_isDisposed || _isNavigating) return;
+
+      showSuccess('Welcome!',
+          subtitle: 'You\'ve successfully signed in with Google. Enjoy your experience!');
+
+      _isNavigating = true;
+
+      // Wait for UI to settle
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (!_isDisposed) {
+        Get.offAllNamed(routes.AppRoutes.mainNavigation);
+      }
+
+    } on SignupRequiredException catch (e) {
+      if (_isDisposed) return;
+
+      setLoading(false);
+      _isNavigating = true;
+
+      // Wait for UI to settle
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (!_isDisposed) {
+        // Navigate to signup with Google credential info
+        Get.toNamed(
+          routes.AppRoutes.signup,
+          arguments: {
+            'email': e.email,
+            'displayName': e.displayName,
+            'fromGoogle': true,
+          },
+        );
+
+        showInfo(
+          'Complete Your Signup',
+          subtitle: 'Please enter your name and create a password to complete your account setup with Google.',
+        );
+      }
+      _isNavigating = false;
     } catch (e) {
+      if (_isDisposed) return;
       final errorInfo = FirebaseErrorHandler.parseError(e);
       showError(errorInfo['title']!, subtitle: errorInfo['subtitle']!);
+      _isNavigating = false;
     } finally {
-      setLoading(false);
+      if (!_isDisposed) {
+        setLoading(false);
+      }
     }
   }
 
   /// Forgot password
   void forgotPassword() {
-    // TODO: Navigate to forgot password screen or show dialog
-    showInfo('Coming Soon', subtitle: 'Password recovery feature will be available shortly. Stay tuned!');
+    if (_isDisposed) return;
+    showInfo('Coming Soon',
+        subtitle: 'Password recovery feature will be available shortly. Stay tuned!');
   }
 
   @override
   void onClose() {
+    _isDisposed = true;
+    emailController.removeListener(_validateForm);
+    passwordController.removeListener(_validateForm);
     emailController.dispose();
     passwordController.dispose();
     super.onClose();
   }
 }
-
