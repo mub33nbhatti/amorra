@@ -1,16 +1,22 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:get_storage/get_storage.dart';
 import '../base_controller.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/utils/firebase_error_handler.dart';
 import '../../../core/config/routes.dart' as routes;
+import '../../../core/constants/app_constants.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/services/firebase_service.dart';
 
 /// Sign In Controller
 /// Handles sign in form logic and validation
 class SigninController extends BaseController {
   // Repository - use Get.find to reuse existing instance
   AuthRepository get _authRepository => Get.find<AuthRepository>();
+  final FirebaseService _firebaseService = FirebaseService();
+  final _storage = GetStorage();
 
   // Form key - unique instance
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -92,6 +98,30 @@ class SigninController extends BaseController {
 
       if (_isDisposed || _isNavigating) return;
 
+      // Mark onboarding as completed (in case user bypassed it)
+      await _markOnboardingCompleted();
+
+      // Check age verification status
+      final currentUser = _firebaseService.currentUser;
+      if (currentUser != null) {
+        final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
+        
+        if (verificationStatus == null || verificationStatus['isAgeVerified'] != true) {
+          // Not verified, navigate to age verification
+          if (kDebugMode) {
+            print('⚠️ User not age verified, navigating to age verification');
+          }
+          
+          _isNavigating = true;
+          await Future.delayed(const Duration(milliseconds: 300));
+          
+          if (!_isDisposed) {
+            Get.offAllNamed(routes.AppRoutes.ageVerification);
+          }
+          return;
+        }
+      }
+
       showSuccess('Welcome back!',
           subtitle: 'You\'ve successfully signed in. Let\'s get started!');
 
@@ -129,6 +159,30 @@ class SigninController extends BaseController {
       await _authRepository.signInWithGoogle();
 
       if (_isDisposed || _isNavigating) return;
+
+      // Mark onboarding as completed (in case user bypassed it)
+      await _markOnboardingCompleted();
+
+      // Check age verification status
+      final currentUser = _firebaseService.currentUser;
+      if (currentUser != null) {
+        final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
+        
+        if (verificationStatus == null || verificationStatus['isAgeVerified'] != true) {
+          // Not verified, navigate to age verification
+          if (kDebugMode) {
+            print('⚠️ User not age verified, navigating to age verification');
+          }
+          
+          _isNavigating = true;
+          await Future.delayed(const Duration(milliseconds: 300));
+          
+          if (!_isDisposed) {
+            Get.offAllNamed(routes.AppRoutes.ageVerification);
+          }
+          return;
+        }
+      }
 
       showSuccess('Welcome!',
           subtitle: 'You\'ve successfully signed in with Google. Enjoy your experience!');
@@ -185,6 +239,33 @@ class SigninController extends BaseController {
     if (_isDisposed) return;
     showInfo('Coming Soon',
         subtitle: 'Password recovery feature will be available shortly. Stay tuned!');
+  }
+
+  /// Mark onboarding as completed
+  Future<void> _markOnboardingCompleted() async {
+    try {
+      // Save to local storage
+      await _storage.write(AppConstants.storageKeyOnboardingCompleted, true);
+
+      // Save to Firestore if user is authenticated
+      final currentUser = _firebaseService.currentUser;
+      if (currentUser != null) {
+        try {
+          await _authRepository.updateOnboardingCompletion(currentUser.uid);
+          if (kDebugMode) {
+            print('✅ Onboarding completion marked after signin');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('⚠️ Failed to save onboarding to Firestore: $e');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Error marking onboarding completion: $e');
+      }
+    }
   }
 
   @override

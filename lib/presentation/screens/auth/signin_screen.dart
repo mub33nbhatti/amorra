@@ -1,16 +1,17 @@
+import 'package:amorra/core/utils/app_images/app_images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/app_colors/app_colors.dart';
-import '../../../core/utils/app_images/app_images.dart';
 import '../../../core/utils/app_responsive/app_responsive.dart';
 import '../../../core/utils/app_spacing/app_spacing.dart';
-import '../../../core/utils/app_styles/app_text_styles.dart';
 import '../../../core/utils/app_texts/app_texts.dart';
 import '../../controllers/auth/signin_controller.dart';
 import '../../widgets/common/app_text_field.dart';
 import '../../widgets/common/app_large_button.dart';
 import '../../widgets/common/app_social_button.dart';
+import '../../widgets/auth/auth_header.dart';
+import '../../widgets/auth/auth_footer.dart';
 import '../../../core/config/routes.dart';
 
 /// Sign In Screen
@@ -35,33 +36,11 @@ class SigninScreen extends GetView<SigninController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // Logo
-              Image.asset(
-                AppImages.splashLogo,
-                width: AppResponsive.screenWidth(context) * 0.35,
-                height: AppResponsive.screenWidth(context) * 0.35,
-                fit: BoxFit.contain,
+              // Auth Header
+              AuthHeader(
+                title: AppTexts.signinTitle,
+                subtitle: AppTexts.signinWelcomeMessage,
               ),
-
-              // Title
-              Text(
-                AppTexts.signinTitle,
-                style: AppTextStyles.headline(context).copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.black,
-                  fontSize: AppResponsive.scaleSize(context, 24),
-                ),
-              ),
-
-              // Welcome Message
-              Text(
-                AppTexts.signinWelcomeMessage,
-                style: AppTextStyles.bodyText(context).copyWith(
-                  color: AppColors.grey,
-                  fontSize: AppResponsive.scaleSize(context, 14),
-                ),
-              ),
-              AppSpacing.vertical(context, 0.02),
 
               // Email Field
               AppTextField(
@@ -125,9 +104,10 @@ class SigninScreen extends GetView<SigninController> {
                     padding: AppSpacing.symmetric(context, h: 0.02, v: 0),
                     child: Text(
                       AppTexts.orContinueWith,
-                      style: AppTextStyles.bodyText(
-                        context,
-                      ).copyWith(color: AppColors.grey),
+                      style: TextStyle(
+                        color: AppColors.grey,
+                        fontSize: AppResponsive.scaleSize(context, 14),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -145,31 +125,8 @@ class SigninScreen extends GetView<SigninController> {
               ),
               AppSpacing.vertical(context, 0.04),
 
-              // Sign Up Link
-              Center(
-                child: RichText(
-                  text: TextSpan(
-                    style: AppTextStyles.bodyText(
-                      context,
-                    ).copyWith(color: AppColors.grey),
-                    children: [
-                      TextSpan(text: AppTexts.dontHaveAccount),
-                      WidgetSpan(
-                        child: GestureDetector(
-                          onTap: () => Get.offAllNamed(AppRoutes.signup),
-                          child: Text(
-                            AppTexts.registerLink,
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Auth Footer
+              AuthFooter(type: AuthFooterType.signin),
               ],
             ),
           ),

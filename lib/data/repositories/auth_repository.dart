@@ -712,4 +712,95 @@ class AuthRepository {
       rethrow;
     }
   }
+
+  /// Update age verification for user
+  /// Saves age, dateOfBirth, and verification status to Firestore
+  Future<void> updateAgeVerification({
+    required String userId,
+    required int age,
+    required DateTime dateOfBirth,
+  }) async {
+    try {
+      if (kDebugMode) {
+        print('📅 Updating age verification for user: $userId');
+        print('   Age: $age, DOB: $dateOfBirth');
+      }
+
+      await _firebaseService
+          .collection(AppConstants.collectionUsers)
+          .doc(userId)
+          .update({
+        'age': age,
+        'dateOfBirth': dateOfBirth,
+        'isAgeVerified': true,
+        'ageVerifiedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        print('✅ Age verification updated successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Update age verification error: $e');
+      }
+      rethrow;
+    }
+  }
+
+  /// Get age verification status from Firestore
+  Future<Map<String, dynamic>?> getAgeVerificationStatus(String userId) async {
+    try {
+      final userDoc = await _firebaseService
+          .collection(AppConstants.collectionUsers)
+          .doc(userId)
+          .get();
+
+      if (!userDoc.exists) {
+        return null;
+      }
+
+      final userData = userDoc.data() as Map<String, dynamic>?;
+      if (userData == null) {
+        return null;
+      }
+
+      return {
+        'isAgeVerified': userData['isAgeVerified'] ?? false,
+        'age': userData['age'],
+        'dateOfBirth': userData['dateOfBirth']?.toDate(),
+      };
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Get age verification status error: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Update onboarding completion status for user
+  Future<void> updateOnboardingCompletion(String userId) async {
+    try {
+      if (kDebugMode) {
+        print('📚 Updating onboarding completion for user: $userId');
+      }
+
+      await _firebaseService
+          .collection(AppConstants.collectionUsers)
+          .doc(userId)
+          .update({
+        'isOnboardingCompleted': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        print('✅ Onboarding completion updated successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Update onboarding completion error: $e');
+      }
+      rethrow;
+    }
+  }
 }
