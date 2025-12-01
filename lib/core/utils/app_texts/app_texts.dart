@@ -63,4 +63,15 @@ class AppTexts {
   static const String skip = "Skip";
   static const String next = "Next";
   static const String getStarted = "Get Started";
+
+  // Age Verification Screen
+  static const String ageVerificationTitle = "Verify Your Age";
+  static const String ageVerificationSubtitle = "Please enter your date of birth to continue";
+  static const String birthdayLabel = "Date of Birth";
+  static const String ageLabel = "Age";
+  static const String verifyAgeButton = "Verify Age";
+  static const String ageVerificationErrorUnder18 = "You must be 18 or older to use this app";
+  static const String ageVerificationErrorInvalid = "Please enter a valid date of birth";
+  static const String ageVerificationErrorMaxAge = "Please enter a valid date of birth";
+  static const String ageYears = "years";
 }

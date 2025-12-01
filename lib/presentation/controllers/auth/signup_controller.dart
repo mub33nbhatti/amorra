@@ -1,17 +1,22 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get_storage/get_storage.dart';
 import '../base_controller.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/utils/firebase_error_handler.dart';
 import '../../../core/config/routes.dart' as routes;
+import '../../../core/constants/app_constants.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/services/firebase_service.dart';
 
 /// Sign Up Controller
 /// Handles sign up form logic and validation
 class SignupController extends BaseController {
   // Repository - use Get.find to reuse existing instance
   AuthRepository get _authRepository => Get.find<AuthRepository>();
+  final FirebaseService _firebaseService = FirebaseService();
+  final _storage = GetStorage();
 
   // Form key - unique instance
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -23,7 +28,6 @@ class SignupController extends BaseController {
 
   // State
   final RxBool isPasswordVisible = false.obs;
-  final RxBool isAgeVerified = false.obs;
   final RxBool isFormValid = false.obs;
   final RxBool isFromGoogle = false.obs;
 
@@ -85,12 +89,6 @@ class SignupController extends BaseController {
     fullnameController.addListener(_validateForm);
     emailController.addListener(_validateForm);
     passwordController.addListener(_validateForm);
-
-    ever(isAgeVerified, (_) {
-      if (!_isDisposed) {
-        _validateForm();
-      }
-    });
   }
 
   /// Validate entire form
@@ -101,10 +99,7 @@ class SignupController extends BaseController {
     final emailFilled = emailController.text.trim().isNotEmpty;
     final passwordFilled = passwordController.text.isNotEmpty;
 
-    isFormValid.value = fullnameFilled &&
-        emailFilled &&
-        passwordFilled &&
-        isAgeVerified.value;
+    isFormValid.value = fullnameFilled && emailFilled && passwordFilled;
   }
 
   /// Private validate form
@@ -134,11 +129,30 @@ class SignupController extends BaseController {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
 
-  /// Set age verification
-  void setAgeVerified(bool? value) {
-    if (_isDisposed) return;
-    if (value != null) {
-      isAgeVerified.value = value;
+  /// Mark onboarding as completed
+  Future<void> _markOnboardingCompleted() async {
+    try {
+      // Save to local storage
+      await _storage.write(AppConstants.storageKeyOnboardingCompleted, true);
+
+      // Save to Firestore if user is authenticated
+      final currentUser = _firebaseService.currentUser;
+      if (currentUser != null) {
+        try {
+          await _authRepository.updateOnboardingCompletion(currentUser.uid);
+          if (kDebugMode) {
+            print('✅ Onboarding completion marked after signup');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('⚠️ Failed to save onboarding to Firestore: $e');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Error marking onboarding completion: $e');
+      }
     }
   }
 
@@ -149,12 +163,6 @@ class SignupController extends BaseController {
     if (!isFormValid.value) {
       showError('Oops! Something\'s missing',
           subtitle: 'Please fill in all fields to create your account');
-      return;
-    }
-
-    if (!isAgeVerified.value) {
-      showError('Age Verification Required',
-          subtitle: 'You must be 18 years or older to create an account');
       return;
     }
 
@@ -177,32 +185,20 @@ class SignupController extends BaseController {
 
       if (_isDisposed || _isNavigating) return;
 
-      if (isFromGoogle.value) {
-        // Coming from Google sign-in, show success and navigate to main
-        showSuccess('Welcome to Amorra!',
-            subtitle: 'Your account has been created with Google. Both email and Google sign-in are now available!');
+      // Mark onboarding as completed (in case user bypassed it)
+      await _markOnboardingCompleted();
 
-        _isNavigating = true;
+      showSuccess('Account Created!',
+          subtitle: 'Your account has been created. Please verify your age to continue.');
 
-        // Wait for UI to settle
-        await Future.delayed(const Duration(milliseconds: 300));
+      _isNavigating = true;
 
-        if (!_isDisposed) {
-          Get.offAllNamed(routes.AppRoutes.mainNavigation);
-        }
-      } else {
-        // Regular signup, navigate to signin
-        showSuccess('Account Created!',
-            subtitle: 'Your account has been created. Please sign in to continue.');
+      // Wait for UI to settle
+      await Future.delayed(const Duration(milliseconds: 300));
 
-        _isNavigating = true;
-
-        // Wait for UI to settle
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        if (!_isDisposed) {
-          Get.offAllNamed(routes.AppRoutes.signin);
-        }
+      if (!_isDisposed) {
+        // Navigate to age verification screen
+        Get.offAllNamed(routes.AppRoutes.ageVerification);
       }
 
     } catch (e) {
@@ -231,8 +227,11 @@ class SignupController extends BaseController {
 
       if (_isDisposed || _isNavigating) return;
 
-      showSuccess('Welcome to Amorra!',
-          subtitle: 'Your account has been created with Google. Let\'s get started!');
+      // Mark onboarding as completed (in case user bypassed it)
+      await _markOnboardingCompleted();
+
+      showSuccess('Account Created!',
+          subtitle: 'Your account has been created with Google. Please verify your age to continue.');
 
       _isNavigating = true;
 
@@ -240,7 +239,8 @@ class SignupController extends BaseController {
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (!_isDisposed) {
-        Get.offAllNamed(routes.AppRoutes.mainNavigation);
+        // Navigate to age verification screen
+        Get.offAllNamed(routes.AppRoutes.ageVerification);
       }
 
     } on SignupRequiredException catch (e) {

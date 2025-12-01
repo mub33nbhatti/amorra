@@ -2,12 +2,14 @@ import 'package:get/get.dart';
 import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/auth/signup_screen.dart';
 import '../../presentation/screens/auth/signin_screen.dart';
+import '../../presentation/screens/auth/age_verification_screen.dart';
 import '../../presentation/screens/main/main_navigation_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/bindings/auth_binding.dart';
 import '../../presentation/bindings/splash_binding.dart';
 import '../../presentation/bindings/main_binding.dart';
 import '../../presentation/bindings/onboarding_binding.dart';
+import '../../presentation/bindings/age_verification_binding.dart';
 
 /// App Routes
 /// Centralized route definitions for GetX navigation
@@ -52,6 +54,12 @@ class AppRoutes {
         name: signin,
         page: () => const SigninScreen(),
         binding: AuthBinding(),
+        preventDuplicates: true,
+      ),
+      GetPage(
+        name: ageVerification,
+        page: () => const AgeVerificationScreen(),
+        binding: AgeVerificationBinding(),
         preventDuplicates: true,
       ),
       GetPage(
