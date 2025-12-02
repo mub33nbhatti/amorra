@@ -46,7 +46,7 @@ class AppDotsIndicator extends StatelessWidget {
           decoration: BoxDecoration(
             color: currentPage == index
                 ? (activeColor ?? AppColors.primary)
-                : (inactiveColor ?? AppColors.grey.withOpacity(0.3)),
+                : (inactiveColor ?? AppColors.grey.withValues(alpha: 0.3)),
             borderRadius: BorderRadius.circular(
               AppResponsive.radius(context, factor: 1),
             ),

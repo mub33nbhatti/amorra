@@ -9,12 +9,16 @@ class AppLargeButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   const AppLargeButton({
     super.key,
     required this.text,
     this.onPressed,
     this.isLoading = false,
+    this.backgroundColor,
+    this.textColor,
   });
 
   @override
@@ -24,21 +28,33 @@ class AppLargeButton extends StatelessWidget {
     );
     final isDisabled = onPressed == null;
 
+    // Build decoration
+    final decoration = isDisabled
+        ? BoxDecoration(
+            color: AppColors.grey.withValues(alpha: 0.5),
+            borderRadius: borderRadius,
+          )
+        : backgroundColor != null
+            ? BoxDecoration(
+                color: backgroundColor,
+                borderRadius: borderRadius,
+              )
+            : BoxDecoration(borderRadius: borderRadius).withAppGradient();
+
+    // Determine text color
+    final finalTextColor = textColor ??
+        (backgroundColor != null ? AppColors.primary : AppColors.white);
+
     return SizedBox(
       width: double.infinity,
-      height: AppResponsive.screenHeight(context) * 0.065,
+      height: AppResponsive.screenHeight(context) * 0.06,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: isLoading ? null : onPressed,
           borderRadius: borderRadius,
           child: Container(
-            decoration: isDisabled
-                ? BoxDecoration(
-                    color: AppColors.grey.withValues(alpha: 0.5),
-                    borderRadius: borderRadius,
-                  )
-                : BoxDecoration(borderRadius: borderRadius).withAppGradient(),
+            decoration: decoration,
             child: Center(
               child: isLoading
                   ? SizedBox(
@@ -47,7 +63,7 @@ class AppLargeButton extends StatelessWidget {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.white,
+                          finalTextColor,
                         ),
                       ),
                     )
@@ -55,7 +71,7 @@ class AppLargeButton extends StatelessWidget {
                       text,
                       style: AppTextStyles.buttonText(context).copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.white,
+                        color: finalTextColor,
                       ),
                     ),
             ),

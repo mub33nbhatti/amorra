@@ -19,7 +19,6 @@ class AppTheme {
         secondary: AppColors.secondary,
         error: AppColors.error,
         surface: AppColors.white,
-        background: AppColors.lightBackground,
       ),
       textTheme: TextTheme(
         displayLarge: TextStyle(

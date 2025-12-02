@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'firebase_config.dart';
 import '../../presentation/controllers/theme/theme_controller.dart';
+import '../utils/app_colors/app_colors.dart';
 
 /// App Initializer
 /// Handles all app initialization logic
@@ -13,6 +15,9 @@ class AppInitializer {
     // Ensure Flutter bindings are initialized
     WidgetsFlutterBinding.ensureInitialized();
 
+    // Set status bar color globally
+    _setStatusBarStyle();
+
     // Initialize GetStorage
     await _initializeStorage();
 
@@ -21,6 +26,17 @@ class AppInitializer {
 
     // Initialize GetX controllers
     _initializeControllers();
+  }
+
+  /// Set status bar style for the whole app
+  static void _setStatusBarStyle() {
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: AppColors.white,
+        statusBarIconBrightness: Brightness.dark, // Dark icons for white background
+        statusBarBrightness: Brightness.light, // For iOS
+      ),
+    );
   }
 
   /// Initialize local storage

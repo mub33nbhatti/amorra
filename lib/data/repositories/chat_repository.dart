@@ -103,5 +103,48 @@ class ChatRepository {
       rethrow;
     }
   }
+
+  /// Check if user has active chat (any messages exist)
+  Future<bool> hasActiveChat(String userId) async {
+    try {
+      final snapshot = await _firebaseService
+          .collection(AppConstants.collectionMessages)
+          .doc(userId)
+          .collection('chats')
+          .limit(1)
+          .get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Has active chat error: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get last message for a user
+  Future<ChatMessageModel?> getLastMessage(String userId) async {
+    try {
+      final snapshot = await _firebaseService
+          .collection(AppConstants.collectionMessages)
+          .doc(userId)
+          .collection('chats')
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+
+      return ChatMessageModel.fromJson({
+        'id': snapshot.docs.first.id,
+        ...snapshot.docs.first.data(),
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Get last message error: $e');
+      }
+      return null;
+    }
+  }
 }
 

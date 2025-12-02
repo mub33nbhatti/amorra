@@ -19,11 +19,13 @@ class AgeVerificationScreen extends GetView<AgeVerificationController> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Prevent back navigation - user must complete verification
-        SystemNavigator.pop();
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          // Prevent back navigation - user must complete verification
+          SystemNavigator.pop();
+        }
       },
       child: Scaffold(
         backgroundColor: AppColors.lightBackground,

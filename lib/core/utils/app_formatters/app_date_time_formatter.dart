@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-String AppDateTimeFormatter(DateTime timestamp) {
+String appDateTimeFormatter(DateTime timestamp) {
   final datePart = DateFormat(
     'EEE MMM dd yyyy',
   ).format(timestamp); // Mon Jul 21 2025

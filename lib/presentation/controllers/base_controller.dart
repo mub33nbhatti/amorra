@@ -18,7 +18,7 @@ abstract class BaseController extends GetxController {
   void setError(String message) {
     errorMessage.value = message;
     if (kDebugMode) {
-      print('Controller Error: $message');
+      debugPrint('Controller Error: $message');
     }
   }
 

@@ -12,7 +12,6 @@ import '../../widgets/common/app_large_button.dart';
 import '../../widgets/common/app_social_button.dart';
 import '../../widgets/auth/auth_header.dart';
 import '../../widgets/auth/auth_footer.dart';
-import '../../../core/config/routes.dart';
 
 /// Sign In Screen
 class SigninScreen extends GetView<SigninController> {
@@ -20,11 +19,13 @@ class SigninScreen extends GetView<SigninController> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Exit app when back button is pressed on signin screen
-        SystemNavigator.pop();
-        return false;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          // Exit app when back button is pressed on signin screen
+          SystemNavigator.pop();
+        }
       },
       child: Scaffold(
       backgroundColor: AppColors.lightBackground,

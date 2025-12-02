@@ -40,22 +40,6 @@ class AuthRepository {
     return email.toLowerCase().trim();
   }
 
-  /// Check if email exists in Firebase Authentication
-  Future<bool> _emailExistsInAuth(String email) async {
-    try {
-      final normalizedEmail = _normalizeEmail(email);
-      final signInMethods = await _firebaseService.auth.fetchSignInMethodsForEmail(normalizedEmail);
-      if (kDebugMode) {
-        print('📋 Sign-in methods for $normalizedEmail: $signInMethods');
-      }
-      return signInMethods.isNotEmpty;
-    } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Error checking email in Auth: $e');
-      }
-      return false;
-    }
-  }
 
   /// Find user document by email (used for email/password signin)
   Future<DocumentSnapshot?> _findUserByEmail(String email) async {
@@ -91,22 +75,6 @@ class AuthRepository {
     }
   }
 
-  /// Check if user exists in Firestore by UID
-  Future<bool> _userExistsInFirestore(String uid) async {
-    try {
-      final userDoc = await _firebaseService
-          .collection(AppConstants.collectionUsers)
-          .doc(uid)
-          .get();
-
-      return userDoc.exists;
-    } catch (e) {
-      if (kDebugMode) {
-        print('⚠️ Error checking user existence: $e');
-      }
-      return false;
-    }
-  }
 
   /// Sign in with email and password
   Future<UserModel> signInWithEmailAndPassword({
@@ -364,12 +332,11 @@ class AuthRepository {
         }
 
         // CLEANUP: Delete the Auth account since Firestore failed
+        // createdUser is guaranteed to be non-null here since we used it at line 341
         try {
-          if (createdUser != null) {
-            await createdUser.delete();
-            if (kDebugMode) {
-              print('✅ Auth account cleaned up successfully');
-            }
+          await createdUser!.delete();
+          if (kDebugMode) {
+            print('✅ Auth account cleaned up successfully');
           }
         } catch (deleteError) {
           if (kDebugMode) {

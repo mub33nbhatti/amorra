@@ -2,7 +2,6 @@ import 'package:amorra/core/utils/app_responsive/app_responsive.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/app_colors/app_colors.dart';
 import '../../../core/utils/app_images/app_images.dart';
-import '../../../core/utils/app_spacing/app_spacing.dart';
 import '../../../core/utils/app_styles/app_text_styles.dart';
 
 /// App Screen Header Widget
@@ -31,36 +30,32 @@ class AppScreenHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: Container(
-        color: AppColors.lightBackground,
-        padding: AppSpacing.symmetric(context, h: 0.02, v: 0.02),
-        child: Row(
-          children: [
-            if (leading != null) leading!,
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: title == null || title!.isEmpty
-                    ? Image.asset(
-                        AppImages.splashLogo,
-                        width: logoWidth ?? AppResponsive.iconSize(context, factor: 3),
-                        height: logoHeight,
-                        fit: BoxFit.contain,
-                      )
-                    : Text(
-                        title!,
-                        style: AppTextStyles.headline(context).copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: AppResponsive.scaleSize(context, 20),
-                          color: AppColors.black,
-                        ),
+      child: Row(
+        children: [
+          if (leading != null) leading!,
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: title == null || title!.isEmpty
+                  ? Image.asset(
+                      AppImages.splashLogo,
+                      width: logoWidth ?? AppResponsive.iconSize(context, factor: 3),
+                      height: logoHeight,
+                      fit: BoxFit.contain,
+                    )
+                  : Text(
+                      title!,
+                      style: AppTextStyles.headline(context).copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: AppResponsive.scaleSize(context, 20),
+                        color: AppColors.black,
                       ),
-              ),
+                    ),
             ),
-            if (actions != null && actions!.isNotEmpty)
-              ...actions!,
-          ],
-        ),
+          ),
+          if (actions != null && actions!.isNotEmpty)
+            ...actions!,
+        ],
       ),
     );
   }

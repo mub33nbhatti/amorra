@@ -65,7 +65,7 @@ class AppSnackbar extends StatelessWidget {
         border: Border.all(color: _borderColor, width: 2),
         boxShadow: [
           BoxShadow(
-            color: _borderColor.withOpacity(0.2),
+            color: _borderColor.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

@@ -76,7 +76,7 @@ class SignupController extends BaseController {
             validateForm();
           } catch (e) {
             if (kDebugMode && !_isDisposed) {
-              print('Error validating form: $e');
+              debugPrint('Error validating form: $e');
             }
           }
         }
