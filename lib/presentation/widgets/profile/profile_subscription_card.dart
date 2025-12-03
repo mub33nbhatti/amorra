@@ -8,9 +8,9 @@ import '../../../core/utils/app_texts/app_texts.dart';
 import '../../widgets/common/app_large_button.dart';
 import '../../widgets/common/app_text_button.dart';
 
-/// Home Subscription Usage Card
+/// Profile Subscription Card Widget
 /// Displays subscription status and usage information
-class HomeSubscriptionUsageCard extends StatelessWidget {
+class ProfileSubscriptionCard extends StatelessWidget {
   final bool isSubscribed;
   final int remainingMessages;
   final int usedMessages;
@@ -19,7 +19,7 @@ class HomeSubscriptionUsageCard extends StatelessWidget {
   final VoidCallback onUpgradeTap;
   final VoidCallback onManageTap;
 
-  const HomeSubscriptionUsageCard({
+  const ProfileSubscriptionCard({
     super.key,
     required this.isSubscribed,
     required this.remainingMessages,
@@ -150,3 +150,4 @@ class HomeSubscriptionUsageCard extends StatelessWidget {
     );
   }
 }
+

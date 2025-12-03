@@ -27,7 +27,7 @@ class HomeTopSection extends StatelessWidget {
         // Greeting with userName
         Text(
           '$greeting,',
-          style: AppTextStyles.bodyText(context).copyWith(
+          style: AppTextStyles.headline(context).copyWith(
             fontWeight: FontWeight.w600,
             color: AppColors.black,
             fontSize: AppResponsive.scaleSize(context, 18),

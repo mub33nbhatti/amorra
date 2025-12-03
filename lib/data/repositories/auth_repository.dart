@@ -770,4 +770,72 @@ class AuthRepository {
       rethrow;
     }
   }
+
+  /// Delete user account
+  /// Deletes both Firestore document and Firebase Auth account
+  Future<void> deleteAccount(String userId) async {
+    try {
+      if (kDebugMode) {
+        print('🗑️ Starting account deletion for user: $userId');
+      }
+
+      final currentUser = _firebaseService.currentUser;
+      if (currentUser == null || currentUser.uid != userId) {
+        throw Exception('User not authenticated or user ID mismatch');
+      }
+
+      // Step 1: Delete Firestore document
+      try {
+        await _firebaseService
+            .collection(AppConstants.collectionUsers)
+            .doc(userId)
+            .delete();
+
+        if (kDebugMode) {
+          print('✅ Firestore document deleted');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Error deleting Firestore document: $e');
+        }
+        // Continue with Auth deletion even if Firestore fails
+      }
+
+      // Step 2: Delete Firebase Auth account
+      try {
+        await currentUser.delete();
+
+        if (kDebugMode) {
+          print('✅ Firebase Auth account deleted');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('❌ Error deleting Auth account: $e');
+        }
+        rethrow;
+      }
+
+      // Step 3: Sign out from Google if applicable
+      try {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        await googleSignIn.signOut();
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Error signing out from Google: $e');
+        }
+        // Non-critical, continue
+      }
+
+      clearPendingGoogleCredential();
+
+      if (kDebugMode) {
+        print('✅ Account deletion completed successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Delete account error: $e');
+      }
+      rethrow;
+    }
+  }
 }

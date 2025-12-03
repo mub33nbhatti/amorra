@@ -45,6 +45,21 @@ class AppTexts {
   static const String profileTitle = "Profile";
   static const String placeholderText = "Placeholder - Coming Soon";
 
+  // Profile Screen
+  static const String profileNameLabel = "Name";
+  static const String profileAgeLabel = "Age";
+  static const String profileEmailLabel = "Email";
+  static const String profileEditName = "Edit Name";
+  static const String profileSaveName = "Save";
+  static const String profileCancelEdit = "Cancel";
+  static const String profileLogoutButton = "Logout";
+  static const String profileDeleteAccountButton = "Delete Account";
+  static const String profileDeleteAccountTitle = "Delete Account";
+  static const String profileDeleteAccountMessage = "Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.";
+  static const String profileDeleteConfirm = "Delete";
+  static const String profileDeleteCancel = "Cancel";
+  static const String profileAgeNotSet = "Not set";
+
   // Onboarding Screens
   // Screen 1
   static const String onboarding1Title = "Find Your Perfect Companion";
@@ -142,4 +157,29 @@ class AppTexts {
       "Upgrade for unlimited support";
   static const String subscriptionManageButton = "Manage subscription";
   static const String subscriptionNextBilling = "Next billing: {date}";
+
+  // Subscription Screen
+  static const String subscriptionScreenTitle = "Choose Your Plan";
+  static const String subscriptionScreenSubtitle =
+      "Unlock unlimited conversations and emotional support";
+  static const String freePlanName = "Free";
+  static const String premiumPlanName = "Premium";
+  static const String freePlanPrice = "Free";
+  static const String premiumPlanPrice = "\$9.99";
+  static const String premiumPlanPeriod = "/month";
+  static const String freePlanDescription = "Perfect for trying out Ella";
+  static const String premiumPlanDescription = "Unlimited access to all features";
+  static const String freePlanFeature1 = "10 messages per day";
+  static const String freePlanFeature2 = "Basic AI conversations";
+  static const String freePlanFeature3 = "Standard context retention";
+  static const String premiumPlanFeature1 = "Unlimited messages";
+  static const String premiumPlanFeature2 = "Enhanced context retention";
+  static const String premiumPlanFeature3 = "Priority response times";
+  static const String premiumPlanFeature4 = "Personalized interactions";
+  static const String premiumPlanFeature5 = "Daily check-ins";
+  static const String premiumPlanFeature6 = "Romantic & flirty communication";
+  static const String subscriptionCurrentPlan = "Current Plan";
+  static const String subscriptionSelectPlan = "Select Plan";
+  static const String subscriptionManageCurrentPlan = "Manage Plan";
+  static const String subscriptionLoading = "Loading plans...";
 }

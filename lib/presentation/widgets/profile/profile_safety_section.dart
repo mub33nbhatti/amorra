@@ -5,10 +5,10 @@ import '../../../core/utils/app_spacing/app_spacing.dart';
 import '../../../core/utils/app_styles/app_text_styles.dart';
 import '../../../core/utils/app_texts/app_texts.dart';
 
-/// Home Safety Section
+/// Profile Safety Section Widget
 /// Displays safety and privacy information
-class HomeSafetySection extends StatelessWidget {
-  const HomeSafetySection({super.key});
+class ProfileSafetySection extends StatelessWidget {
+  const ProfileSafetySection({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -79,3 +79,4 @@ class HomeSafetySection extends StatelessWidget {
     );
   }
 }
+

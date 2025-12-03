@@ -16,8 +16,8 @@ service cloud.firestore {
         && request.auth.uid == userId;
       allow update: if isAuthenticated()
         && request.auth.uid == userId;
-
-      allow delete: if false;
+      allow delete: if isAuthenticated()
+        && request.auth.uid == userId;
     }
 
     // Messages
@@ -46,6 +46,12 @@ service cloud.firestore {
       allow read, write: if isAuthenticated()
         && (resource.data.userId == request.auth.uid
             || request.resource.data.userId == request.auth.uid);
+    }
+
+    // Daily suggestions
+    match /daily_suggestions/{suggestionId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only admins can write (handled server-side or via admin dashboard)
     }
 
     // Deny everything else

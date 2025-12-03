@@ -8,8 +8,6 @@ import '../../controllers/home/home_controller.dart';
 import '../../widgets/home/home_top_section.dart';
 import '../../widgets/home/home_chat_cta_card.dart';
 import '../../widgets/home/home_suggestions_section.dart';
-import '../../widgets/home/home_subscription_usage_card.dart';
-import '../../widgets/home/home_safety_section.dart';
 
 /// Home Screen
 /// Main home screen with greeting, chat CTA, suggestions, and safety info
@@ -54,30 +52,10 @@ class HomeScreen extends GetView<HomeController> {
 
               // SuggestionsSection
               HomeSuggestionsSection(
-                suggestions: controller.dailySuggestions,
+                suggestions: controller.dailySuggestions.toList(),
                 onSuggestionTap: (starterMessage) =>
                     controller.navigateToChat(starterMessage: starterMessage),
               ),
-
-              AppSpacing.vertical(context, 0.02),
-
-              // Subscription Usage Card
-              HomeSubscriptionUsageCard(
-                isSubscribed: controller.isSubscribed,
-                remainingMessages: controller.remainingFreeMessages,
-                usedMessages: controller.usedMessages,
-                dailyLimit: controller.dailyLimit,
-                nextBillingDate: controller.nextBillingDate,
-                onUpgradeTap: () => controller.navigateToSubscription(),
-                onManageTap: () => controller.navigateToSubscription(),
-              ),
-
-              AppSpacing.vertical(context, 0.02),
-
-              // SafetySection
-              HomeSafetySection(),
-
-              AppSpacing.vertical(context, 0.04), // Bottom padding
             ],
           ),
         );

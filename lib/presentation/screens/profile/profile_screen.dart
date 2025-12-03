@@ -1,55 +1,107 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../../core/utils/app_colors/app_colors.dart';
 import '../../../core/utils/app_responsive/app_responsive.dart';
 import '../../../core/utils/app_spacing/app_spacing.dart';
 import '../../../core/utils/app_styles/app_text_styles.dart';
 import '../../../core/utils/app_texts/app_texts.dart';
 import '../../widgets/common/app_screen_header.dart';
+import '../../widgets/profile/profile_header_card.dart';
+import '../../widgets/profile/profile_user_info_card.dart';
+import '../../widgets/profile/profile_action_buttons.dart';
+import '../../widgets/profile/profile_subscription_card.dart';
+import '../../widgets/profile/profile_safety_section.dart';
+import '../../controllers/profile/profile_controller.dart';
 
 /// Profile Screen
-/// Placeholder screen for profile tab
-class ProfileScreen extends StatelessWidget {
+/// Eye-catching profile screen with user information and account management
+class ProfileScreen extends GetView<ProfileController> {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
-      body: Column(
-        children: [
-          const AppScreenHeader(title: AppTexts.profileTitle),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.person_outline,
-                    size: AppResponsive.iconSize(context, factor: 5),
-                    color: AppColors.primary,
+      backgroundColor: AppColors.white,
+      body: Obx(() {
+        if (controller.isLoading.value && controller.user.value == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.user.value == null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Iconsax.profile_2user,
+                  size: AppResponsive.iconSize(context, factor: 5),
+                  color: AppColors.grey,
+                ),
+                AppSpacing.vertical(context, 0.02),
+                Text(
+                  'No user data available',
+                  style: AppTextStyles.bodyText(context).copyWith(
+                    color: AppColors.grey,
                   ),
-                  AppSpacing.vertical(context, 0.03),
-                  Text(
-                    'Profile Screen',
-                    style: AppTextStyles.headline(context).copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.black,
-                    ),
-                  ),
-                  AppSpacing.vertical(context, 0.01),
-                  Text(
-                    AppTexts.placeholderText,
-                    style: AppTextStyles.bodyText(context).copyWith(
-                      color: AppColors.grey,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+          );
+        }
+
+        return SingleChildScrollView(
+          padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const AppScreenHeader(title: AppTexts.profileTitle),
+              AppSpacing.vertical(context, 0.03),
+
+              // Profile Header Card with Gradient
+              Obx(() => ProfileHeaderCard(
+                    userName: controller.userName,
+                    isEditingName: controller.isEditingName.value,
+                    nameController: controller.nameController,
+                    onEditTap: controller.startEditingName,
+                    onSave: controller.saveName,
+                    onCancel: controller.cancelEditingName,
+                  )),
+              AppSpacing.vertical(context, 0.02),
+
+              // User Information Card
+              ProfileUserInfoCard(
+                ageDisplayText: controller.ageDisplayText,
+                email: controller.userEmail,
+              ),
+              AppSpacing.vertical(context, 0.02),
+
+              // Subscription Card
+              Obx(() => ProfileSubscriptionCard(
+                    isSubscribed: controller.isSubscribed,
+                    remainingMessages: controller.remainingFreeMessages,
+                    usedMessages: controller.usedMessages,
+                    dailyLimit: controller.dailyLimit,
+                    nextBillingDate: controller.nextBillingDate,
+                    onUpgradeTap: controller.navigateToSubscription,
+                    onManageTap: controller.navigateToSubscription,
+                  )),
+              AppSpacing.vertical(context, 0.02),
+
+              // Safety Section
+              const ProfileSafetySection(),
+              AppSpacing.vertical(context, 0.02),
+
+              // Action Buttons
+              Obx(() => ProfileActionButtons(
+                    onLogout: controller.logout,
+                    onDeleteAccount: controller.deleteAccount,
+                    isLoading: controller.isLoading.value,
+                  )),
+            ],
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 }
-

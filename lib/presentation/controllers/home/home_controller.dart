@@ -1,59 +1,30 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import '../../../data/models/chat_message_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/daily_suggestion_model.dart';
 import '../../../data/repositories/chat_repository.dart';
+import '../../../data/repositories/suggestions_repository.dart';
 import '../../../core/utils/app_texts/app_texts.dart';
-import '../../../core/config/app_config.dart';
 import '../base_controller.dart';
 import '../auth/auth_controller.dart';
-import '../subscription/subscription_controller.dart';
 
 /// Home Controller
 /// Handles home screen logic and state
 class HomeController extends BaseController {
   final ChatRepository _chatRepository = ChatRepository();
+  final SuggestionsRepository _suggestionsRepository = SuggestionsRepository();
 
   // State
   final RxString userName = ''.obs;
   final RxString greeting = ''.obs;
   final RxBool hasActiveChat = false.obs;
   final Rx<ChatMessageModel?> lastMessage = Rx<ChatMessageModel?>(null);
+  final RxList<DailySuggestionModel> dailySuggestions = <DailySuggestionModel>[].obs;
 
-  // Hardcoded daily suggestions
-  List<DailySuggestionModel> get dailySuggestions => [
-    DailySuggestionModel(
-      id: '1',
-      title: AppTexts.suggestion1Title,
-      description: AppTexts.suggestion1Description,
-      starterMessage: AppTexts.suggestion1StarterMessage,
-    ),
-    DailySuggestionModel(
-      id: '2',
-      title: AppTexts.suggestion2Title,
-      description: AppTexts.suggestion2Description,
-      starterMessage: AppTexts.suggestion2StarterMessage,
-    ),
-    DailySuggestionModel(
-      id: '3',
-      title: AppTexts.suggestion3Title,
-      description: AppTexts.suggestion3Description,
-      starterMessage: AppTexts.suggestion3StarterMessage,
-    ),
-    DailySuggestionModel(
-      id: '4',
-      title: AppTexts.suggestion4Title,
-      description: AppTexts.suggestion4Description,
-      starterMessage: AppTexts.suggestion4StarterMessage,
-    ),
-    DailySuggestionModel(
-      id: '5',
-      title: AppTexts.suggestion5Title,
-      description: AppTexts.suggestion5Description,
-      starterMessage: AppTexts.suggestion5StarterMessage,
-    ),
-  ];
+  // Stream subscription for suggestions
+  StreamSubscription<List<DailySuggestionModel>>? _suggestionsSubscription;
 
   // User ID getter
   String? get userId {
@@ -68,7 +39,53 @@ class HomeController extends BaseController {
   void onInit() {
     super.onInit();
     _setupUserListener();
+    _setupSuggestionsListener();
     _initializeData();
+  }
+
+  @override
+  void onClose() {
+    // Cancel stream subscription
+    _suggestionsSubscription?.cancel();
+    super.onClose();
+  }
+
+  /// Setup listener for daily suggestions from Firebase
+  void _setupSuggestionsListener() {
+    try {
+      // Cancel existing subscription if any
+      _suggestionsSubscription?.cancel();
+
+      // Create new subscription
+      _suggestionsSubscription = _suggestionsRepository
+          .getActiveSuggestionsStream()
+          .listen(
+        (suggestions) {
+          if (kDebugMode) {
+            print('✅ Daily suggestions stream update: ${suggestions.length} items');
+          }
+          dailySuggestions.value = suggestions;
+        },
+        onError: (error) {
+          if (kDebugMode) {
+            print('❌ Error listening to suggestions stream: $error');
+          }
+          setError('Failed to load suggestions');
+          // Set empty list on error
+          dailySuggestions.value = [];
+        },
+        cancelOnError: false, // Keep listening even on error
+      );
+
+      if (kDebugMode) {
+        print('✅ Suggestions stream listener set up');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error setting up suggestions listener: $e');
+      }
+      dailySuggestions.value = [];
+    }
   }
 
   /// Setup listener for user changes
@@ -111,6 +128,9 @@ class HomeController extends BaseController {
       // Set time-based greeting
       greeting.value = _getTimeBasedGreeting();
 
+      // Note: Daily suggestions are loaded via stream listener
+      // No need to load separately as stream will provide initial data
+
       // Check active chat and get last message
       if (userId != null) {
         await _checkActiveChat();
@@ -120,6 +140,9 @@ class HomeController extends BaseController {
       }
     } catch (e) {
       setError(e.toString());
+      if (kDebugMode) {
+        print('❌ Error initializing data: $e');
+      }
     } finally {
       setLoading(false);
     }
@@ -190,49 +213,6 @@ class HomeController extends BaseController {
     }
     // TODO: Implement actual navigation later
     // Get.toNamed(AppRoutes.chat, arguments: {'starterMessage': starterMessage});
-  }
-
-  /// Navigate to subscription screen
-  void navigateToSubscription() {
-    showInfo(
-      'Navigating to Subscription',
-      subtitle: 'Opening subscription plans...',
-    );
-    // TODO: Implement actual navigation later
-    // Get.toNamed(AppRoutes.subscription);
-  }
-
-  /// Get subscription controller
-  SubscriptionController? get _subscriptionController {
-    try {
-      return Get.find<SubscriptionController>();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Check if user is subscribed
-  bool get isSubscribed {
-    return _subscriptionController?.isSubscribed.value ?? false;
-  }
-
-  /// Get remaining free messages
-  int get remainingFreeMessages {
-    return _subscriptionController?.remainingFreeMessages.value ?? AppConfig.freeMessageLimit;
-  }
-
-  /// Get used messages (for progress indicator)
-  int get usedMessages {
-    return AppConfig.freeDailyLimit - remainingFreeMessages;
-  }
-
-  /// Get daily limit
-  int get dailyLimit => AppConfig.freeDailyLimit;
-
-  /// Get next billing date (if subscribed)
-  DateTime? get nextBillingDate {
-    final subscription = _subscriptionController?.subscription.value;
-    return subscription?.endDate;
   }
 
   /// Refresh home screen data

@@ -3,6 +3,7 @@ import '../controllers/main/main_navigation_controller.dart';
 import '../controllers/home/home_controller.dart';
 import '../controllers/auth/auth_controller.dart';
 import '../controllers/subscription/subscription_controller.dart';
+import '../controllers/profile/profile_controller.dart';
 
 /// Main Navigation Binding
 /// Dependency injection for main navigation
@@ -19,6 +20,7 @@ class MainBinding extends Bindings {
     }
     Get.lazyPut(() => MainNavigationController());
     Get.lazyPut(() => HomeController());
+    Get.lazyPut(() => ProfileController());
   }
 }
 
