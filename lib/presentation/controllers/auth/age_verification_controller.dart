@@ -48,11 +48,22 @@ class AgeVerificationController extends BaseController {
       final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
       
       if (verificationStatus != null && verificationStatus['isAgeVerified'] == true) {
-        // User is verified, navigate to main
-        if (kDebugMode) {
-          print('✅ User already age verified, navigating to main');
+        // User is verified, check profile setup status
+        final isProfileSetupCompleted = await _authRepository.getProfileSetupStatus(currentUser.uid);
+        
+        if (isProfileSetupCompleted) {
+          // Profile setup completed, navigate to main
+          if (kDebugMode) {
+            print('✅ User age verified and profile setup completed, navigating to main');
+          }
+          _navigateToMain();
+        } else {
+          // Profile setup not completed, navigate to profile setup
+          if (kDebugMode) {
+            print('⚠️ User age verified but profile setup not completed, navigating to profile setup');
+          }
+          _navigateToProfileSetup();
         }
-        _navigateToMain();
         return;
       }
 
@@ -178,8 +189,8 @@ class AgeVerificationController extends BaseController {
       // Wait a bit for user to see success message
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Navigate to main
-      _navigateToMain();
+      // Navigate to profile setup (after age verification)
+      _navigateToProfileSetup();
     } catch (e) {
       if (kDebugMode) {
         print('❌ Age verification error: $e');
@@ -193,7 +204,12 @@ class AgeVerificationController extends BaseController {
     }
   }
 
-  /// Navigate to main navigation screen
+  /// Navigate to profile setup screen
+  void _navigateToProfileSetup() {
+    Get.offAllNamed(AppRoutes.profileSetup);
+  }
+
+  /// Navigate to main navigation screen (for already verified users)
   void _navigateToMain() {
     Get.offAllNamed(AppRoutes.mainNavigation);
   }

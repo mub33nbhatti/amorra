@@ -50,11 +50,22 @@ class SplashController extends BaseController {
           final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
           
           if (verificationStatus != null && verificationStatus['isAgeVerified'] == true) {
-            // User is verified, navigate to main
-            if (kDebugMode) {
-              print('✅ User age verified, navigating to main');
+            // User is verified, check profile setup status
+            final isProfileSetupCompleted = await _authRepository.getProfileSetupStatus(currentUser.uid);
+            
+            if (isProfileSetupCompleted) {
+              // Profile setup completed, navigate to main
+              if (kDebugMode) {
+                print('✅ User age verified and profile setup completed, navigating to main');
+              }
+              Get.offAllNamed(AppRoutes.mainNavigation);
+            } else {
+              // Profile setup not completed, navigate to profile setup
+              if (kDebugMode) {
+                print('⚠️ User age verified but profile setup not completed, navigating to profile setup');
+              }
+              Get.offAllNamed(AppRoutes.profileSetup);
             }
-            Get.offAllNamed(AppRoutes.mainNavigation);
           } else {
             // User not verified, navigate to age verification
             if (kDebugMode) {

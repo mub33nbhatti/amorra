@@ -3,6 +3,7 @@ import '../../presentation/screens/splash/splash_screen.dart';
 import '../../presentation/screens/auth/signup_screen.dart';
 import '../../presentation/screens/auth/signin_screen.dart';
 import '../../presentation/screens/auth/age_verification_screen.dart';
+import '../../presentation/screens/profile_setup/profile_setup_screen.dart';
 import '../../presentation/screens/main/main_navigation_screen.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/bindings/auth_binding.dart';
@@ -10,6 +11,7 @@ import '../../presentation/bindings/splash_binding.dart';
 import '../../presentation/bindings/main_binding.dart';
 import '../../presentation/bindings/onboarding_binding.dart';
 import '../../presentation/bindings/age_verification_binding.dart';
+import '../../presentation/bindings/profile_setup_binding.dart';
 
 /// App Routes
 /// Centralized route definitions for GetX navigation
@@ -21,6 +23,7 @@ class AppRoutes {
   static const String signin = '/signin';
   static const String mainNavigation = '/main';
   static const String ageVerification = '/age-verification';
+  static const String profileSetup = '/profile-setup';
   static const String onboarding = '/onboarding';
   static const String chat = '/chat';
   static const String subscription = '/subscription';
@@ -60,6 +63,12 @@ class AppRoutes {
         name: ageVerification,
         page: () => const AgeVerificationScreen(),
         binding: AgeVerificationBinding(),
+        preventDuplicates: true,
+      ),
+      GetPage(
+        name: profileSetup,
+        page: () => const ProfileSetupScreen(),
+        binding: ProfileSetupBinding(),
         preventDuplicates: true,
       ),
       GetPage(

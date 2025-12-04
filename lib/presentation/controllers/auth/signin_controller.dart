@@ -101,7 +101,7 @@ class SigninController extends BaseController {
       // Mark onboarding as completed (in case user bypassed it)
       await _markOnboardingCompleted();
 
-      // Check age verification status
+      // Check age verification and profile setup status
       final currentUser = _firebaseService.currentUser;
       if (currentUser != null) {
         final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
@@ -117,6 +117,24 @@ class SigninController extends BaseController {
           
           if (!_isDisposed) {
             Get.offAllNamed(routes.AppRoutes.ageVerification);
+          }
+          return;
+        }
+
+        // Age verified, check profile setup status
+        final isProfileSetupCompleted = await _authRepository.getProfileSetupStatus(currentUser.uid);
+        
+        if (!isProfileSetupCompleted) {
+          // Profile setup not completed, navigate to profile setup
+          if (kDebugMode) {
+            print('⚠️ User age verified but profile setup not completed, navigating to profile setup');
+          }
+          
+          _isNavigating = true;
+          await Future.delayed(const Duration(milliseconds: 300));
+          
+          if (!_isDisposed) {
+            Get.offAllNamed(routes.AppRoutes.profileSetup);
           }
           return;
         }
@@ -163,7 +181,7 @@ class SigninController extends BaseController {
       // Mark onboarding as completed (in case user bypassed it)
       await _markOnboardingCompleted();
 
-      // Check age verification status
+      // Check age verification and profile setup status
       final currentUser = _firebaseService.currentUser;
       if (currentUser != null) {
         final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
@@ -179,6 +197,24 @@ class SigninController extends BaseController {
           
           if (!_isDisposed) {
             Get.offAllNamed(routes.AppRoutes.ageVerification);
+          }
+          return;
+        }
+
+        // Age verified, check profile setup status
+        final isProfileSetupCompleted = await _authRepository.getProfileSetupStatus(currentUser.uid);
+        
+        if (!isProfileSetupCompleted) {
+          // Profile setup not completed, navigate to profile setup
+          if (kDebugMode) {
+            print('⚠️ User age verified but profile setup not completed, navigating to profile setup');
+          }
+          
+          _isNavigating = true;
+          await Future.delayed(const Duration(milliseconds: 300));
+          
+          if (!_isDisposed) {
+            Get.offAllNamed(routes.AppRoutes.profileSetup);
           }
           return;
         }

@@ -1,19 +1,29 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../data/models/chat_message_model.dart';
 import '../../../domain/services/chat_service.dart';
 import '../base_controller.dart';
 import '../../../core/config/app_config.dart';
 import '../auth/auth_controller.dart';
+import '../../../data/services/chat_api_service.dart';
 
 /// Chat Controller
 /// Handles chat interface logic and state
 class ChatController extends BaseController {
   final ChatService _chatService = ChatService();
+  final ChatApiService _chatApiService = ChatApiService();
 
   // State
   final RxList<ChatMessageModel> messages = <ChatMessageModel>[].obs;
   final RxBool isTyping = false.obs;
-  final RxString inputMessage = ''.obs;
+  final RxInt remainingMessages = 10.obs; // Default to 10 for free tier
+  final TextEditingController inputController = TextEditingController();
+
+  // Computed
+  bool get canSendMessage {
+    return remainingMessages.value > 0;
+  }
 
   // User ID (should come from auth)
   String? get userId => Get.find<AuthController>().currentUser.value?.id;
@@ -24,7 +34,19 @@ class ChatController extends BaseController {
     if (userId != null) {
       loadMessages();
       listenToMessages();
+      checkDailyLimit();
     }
+    
+    // Listen to input changes
+    inputController.addListener(() {
+      // Update canSendMessage based on input and limit
+    });
+  }
+
+  @override
+  void onClose() {
+    inputController.dispose();
+    super.onClose();
   }
 
   /// Load messages stream
@@ -57,41 +79,101 @@ class ChatController extends BaseController {
   }
 
   /// Send message
-  Future<void> sendMessage(String message) async {
+  Future<void> sendMessage() async {
     if (userId == null) {
       showError('Sign In Required', subtitle: 'Please sign in to start chatting and send messages.');
       return;
     }
 
-    if (message.trim().isEmpty) {
+    final message = inputController.text.trim();
+    if (message.isEmpty) {
+      return;
+    }
+
+    // Check daily limit
+    if (remainingMessages.value <= 0) {
+      showError(
+        'Daily Limit Reached',
+        subtitle: 'You\'ve reached your daily message limit. Upgrade to Premium for unlimited messages.',
+      );
       return;
     }
 
     try {
       // Clear input
-      inputMessage.value = '';
+      inputController.clear();
 
       // Show typing indicator
       isTyping.value = true;
 
-      // Send message and get AI response
-      await _chatService.sendMessage(
-        userId: userId!,
-        message: message,
-      );
+      // TODO: Replace with actual API call
+      // This will call ChatApiService.sendMessageToAI() when API is integrated
+      await _sendMessageWithAPI(message);
 
-      // Typing indicator will be handled by stream update
+      // Update remaining messages
+      remainingMessages.value = (remainingMessages.value - 1).clamp(0, 999);
+
+      // Typing indicator will be handled by stream update or API response
     } catch (e) {
+      if (kDebugMode) {
+        print('Error sending message: $e');
+      }
       setError(e.toString());
       showError('Message Failed', subtitle: 'We couldn\'t send your message. Please check your connection and try again.');
     } finally {
-      isTyping.value = false;
+      // Typing indicator will be cleared when AI response arrives
+      // For now, clear after a delay (will be replaced with actual API response)
+      Future.delayed(const Duration(seconds: 2), () {
+        isTyping.value = false;
+      });
     }
   }
 
-  /// Update input message
-  void updateInputMessage(String value) {
-    inputMessage.value = value;
+  /// Send message using API (placeholder)
+  /// TODO: Replace with actual API call
+  Future<void> _sendMessageWithAPI(String message) async {
+    // For now, use existing chat service
+    // This will be replaced with ChatApiService.sendMessageToAI() when API is integrated
+    await _chatService.sendMessage(
+      userId: userId!,
+      message: message,
+    );
+  }
+
+  /// Check daily message limit
+  /// TODO: Replace with actual API call
+  Future<void> checkDailyLimit() async {
+    if (userId == null) return;
+
+    try {
+      // TODO: Replace with actual API call
+      // This will call ChatApiService.checkDailyLimit() when API is integrated
+      // For now, use mock data or existing Firestore data
+      final limit = await _chatApiService.checkDailyLimit(userId!);
+      remainingMessages.value = limit;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking daily limit: $e');
+      }
+      // Default to 10 for free tier if check fails
+      remainingMessages.value = 10;
+    }
+  }
+
+  /// Get AI response (placeholder)
+  /// TODO: Replace with actual API call
+  Future<String> getAIResponse(String messageId) async {
+    // TODO: Replace with actual API call
+    // This will call ChatApiService.getAIResponse() when API is integrated
+    return _chatApiService.getAIResponse(messageId);
+  }
+
+  /// Moderate content (placeholder)
+  /// TODO: Replace with actual API call
+  Future<bool> moderateContent(String content) async {
+    // TODO: Replace with actual API call
+    // This will call ChatApiService.moderateContent() when API is integrated
+    return _chatApiService.moderateContent(content);
   }
 }
 

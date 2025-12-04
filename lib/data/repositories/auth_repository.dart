@@ -745,6 +745,44 @@ class AuthRepository {
     }
   }
 
+  /// Get profile setup status from Firestore
+  /// Returns true if user has completed profile setup (has preferences with required fields)
+  Future<bool> getProfileSetupStatus(String userId) async {
+    try {
+      final userDoc = await _firebaseService
+          .collection(AppConstants.collectionUsers)
+          .doc(userId)
+          .get();
+
+      if (!userDoc.exists) {
+        return false;
+      }
+
+      final userData = userDoc.data() as Map<String, dynamic>?;
+      if (userData == null) {
+        return false;
+      }
+
+      final preferences = userData['preferences'] as Map<String, dynamic>?;
+      if (preferences == null) {
+        return false;
+      }
+
+      // Check if required fields are present
+      final hasTone = preferences['conversationTone'] != null &&
+          (preferences['conversationTone'] as String).isNotEmpty;
+      final hasSupportType = preferences['supportType'] != null &&
+          (preferences['supportType'] as String).isNotEmpty;
+
+      return hasTone && hasSupportType;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Get profile setup status error: $e');
+      }
+      return false;
+    }
+  }
+
   /// Update onboarding completion status for user
   Future<void> updateOnboardingCompletion(String userId) async {
     try {

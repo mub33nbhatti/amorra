@@ -1,4 +1,9 @@
+import 'package:amorra/core/utils/app_colors/app_colors.dart';
+import 'package:amorra/core/utils/app_responsive/app_responsive.dart';
+import 'package:amorra/core/utils/app_spacing/app_spacing.dart';
+import 'package:amorra/core/utils/app_styles/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 
 /// Not Found Screen
 /// Displayed when navigating to an unknown route
@@ -9,31 +14,42 @@ class NotFoundScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Page Not Found'),
+        title: Text(
+          'Screen Not Found',
+          style: AppTextStyles.headline(context).copyWith(
+            color: AppColors.black,
+            fontSize: AppResponsive.scaleSize(context, 20),
+          ),
+        ),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.error_outline,
+              Iconsax.close_circle,
               size: 64,
               color: Theme.of(context).colorScheme.error,
             ),
-            const SizedBox(height: 16),
-            Text(
-              '404',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-            const SizedBox(height: 8),
+            AppSpacing.vertical(context, 0.01),
+            Text('404', style: AppTextStyles.headline(context).copyWith(
+              color: AppColors.black,
+              fontSize: AppResponsive.scaleSize(context, 30),
+            ),),
+            AppSpacing.vertical(context, 0.02),
             Text(
               'Page Not Found',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: AppTextStyles.bodyText(context).copyWith(
+                color: AppColors.black,
+                fontSize: AppResponsive.scaleSize(context, 20),
+              ),
             ),
-            const SizedBox(height: 8),
             Text(
               'The page you are looking for does not exist.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: AppTextStyles.bodyText(context).copyWith(
+                color: AppColors.black,
+                fontSize: AppResponsive.scaleSize(context, 14),
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -42,4 +58,3 @@ class NotFoundScreen extends StatelessWidget {
     );
   }
 }
-

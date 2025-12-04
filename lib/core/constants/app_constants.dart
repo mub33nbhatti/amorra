@@ -6,6 +6,7 @@ class AppConstants {
   static const String storageKeyUserName = 'user_name';
   static const String storageKeyAgeVerified = 'age_verified';
   static const String storageKeyOnboardingCompleted = 'onboarding_completed';
+  static const String storageKeyProfileSetupCompleted = 'profile_setup_completed';
   static const String storageKeySubscriptionStatus = 'subscription_status';
   static const String storageKeyThemeMode = 'theme_mode';
   static const String storageKeyAuthToken = 'auth_token';
