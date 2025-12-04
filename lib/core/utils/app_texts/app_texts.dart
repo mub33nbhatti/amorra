@@ -182,4 +182,60 @@ class AppTexts {
   static const String subscriptionSelectPlan = "Select Plan";
   static const String subscriptionManageCurrentPlan = "Manage Plan";
   static const String subscriptionLoading = "Loading plans...";
+
+  // Profile Setup Screen
+  static const String profileSetupTitle = "Set Up Your Profile";
+  static const String profileSetupSubtitle =
+      "Help Ella understand your preferences for better conversations";
+  static const String conversationToneLabel = "Conversation Tone";
+  static const String conversationToneHint = "Select your preferred tone";
+  static const String conversationToneGentle = "Gentle";
+  static const String conversationToneSlightlyFlirty = "Slightly Flirty";
+  static const String conversationToneMorePractical = "More Practical";
+  static const String topicsToAvoidLabel = "Topics to Avoid";
+  static const String topicsToAvoidHint = "Select topics you'd prefer not to discuss";
+  static const String topicPolitics = "Politics";
+  static const String topicReligion = "Religion";
+  static const String topicHealthIssues = "Health Issues";
+  static const String topicWorkStress = "Work Stress";
+  static const String topicFamilyIssues = "Family Issues";
+  static const String topicFinancialWorries = "Financial Worries";
+  static const String relationshipStatusLabel = "Relationship Status";
+  static const String relationshipStatusHint = "Select your relationship status";
+  static const String relationshipStatusSingle = "Single";
+  static const String relationshipStatusDivorced = "Divorced";
+  static const String relationshipStatusWidowed = "Widowed";
+  static const String relationshipStatusOther = "Other";
+  static const String supportTypeLabel = "What kind of support are you looking for?";
+  static const String supportTypeHint = "Select the type of support";
+  static const String supportTypeSupportiveFriend = "Supportive Friend";
+  static const String supportTypeRomanticPartner = "Romantic Partner";
+  static const String supportTypeCaringListener = "Caring Listener";
+  static const String supportTypeMentor = "Mentor";
+  static const String supportTypeCompanion = "Companion";
+  static const String checkInFrequencyLabel = "Check-in Frequency Preference";
+  static const String checkInFrequencyHint = "How often would you like check-ins?";
+  static const String checkInFrequencyDaily = "Daily";
+  static const String checkInFrequencyFewTimesWeek = "Few times a week";
+  static const String checkInFrequencyWeekly = "Weekly";
+  static const String checkInFrequencyAsNeeded = "As needed";
+  static const String profileSetupSaveButton = "Save & Continue";
+  static const String profileSetupOptional = "(Optional)";
+
+  // Chat Screen
+  static const String chatAIPersonaName = "Ella";
+  static const String chatAIStatus = "Always here for you!";
+  static const String chatInputHint = "Type your message...";
+  static const String chatSendButton = "Send";
+  static const String chatEmptyStateTitle = "Start a conversation";
+  static const String chatEmptyStateSubtitle =
+      "Send a message to begin chatting with Ella";
+  static const String chatDailyLimitReached = "Daily message limit reached";
+  static const String chatUpgradePrompt =
+      "Upgrade to Premium for unlimited messages";
+  static const String chatMessagesRemaining = "{count} messages remaining today";
+  static const String chatUnlimitedMessages = "Unlimited messages";
+  static const String chatTypingIndicator = "Ella is typing...";
+  static const String chatErrorSending = "Failed to send message";
+  static const String chatErrorLoading = "Failed to load messages";
 }
