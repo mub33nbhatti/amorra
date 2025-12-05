@@ -5,9 +5,13 @@ import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/utils/app_colors/app_colors.dart';
+import '../../../core/utils/app_texts/app_texts.dart';
 import '../base_controller.dart';
 import '../auth/auth_controller.dart';
 import '../subscription/subscription_controller.dart';
+import '../../widgets/common/app_alert_dialog.dart';
+import '../../widgets/common/app_password_dialog.dart';
 
 /// Profile Controller
 /// Handles profile screen logic and state
@@ -152,6 +156,20 @@ class ProfileController extends BaseController {
 
   /// Logout user
   Future<void> logout() async {
+    // Show confirmation dialog
+    final confirmed = await Get.dialog<bool>(
+      AppAlertDialog(
+        title: AppTexts.profileLogoutTitle,
+        subtitle: AppTexts.profileLogoutMessage,
+        primaryButtonText: AppTexts.profileLogoutConfirm,
+        secondaryButtonText: AppTexts.profileDeleteCancel,
+        onPrimaryPressed: () => Get.back(result: true),
+        onSecondaryPressed: () => Get.back(result: false),
+      ),
+    );
+
+    if (confirmed != true) return;
+
     try {
       setLoading(true);
       await _authController.signOut();
@@ -172,24 +190,15 @@ class ProfileController extends BaseController {
 
     // Show confirmation dialog
     final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            style: TextButton.styleFrom(
-              foregroundColor: Get.theme.colorScheme.error,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
+      AppAlertDialog(
+        title: AppTexts.profileDeleteAccountTitle,
+        subtitle: AppTexts.profileDeleteAccountMessage,
+        primaryButtonText: AppTexts.profileDeleteConfirm,
+        secondaryButtonText: AppTexts.profileDeleteCancel,
+        onPrimaryPressed: () => Get.back(result: true),
+        onSecondaryPressed: () => Get.back(result: false),
+        primaryButtonColor: AppColors.error,
+        primaryButtonTextColor: AppColors.white,
       ),
     );
 
@@ -206,6 +215,51 @@ class ProfileController extends BaseController {
         'Account Deleted',
         subtitle: 'Your account has been permanently deleted.',
       );
+    } on ReauthenticationRequiredException {
+      setLoading(false);
+      
+      // Show password dialog for re-authentication
+      final passwordResult = await Get.dialog<String>(
+        AppPasswordDialog(
+          title: AppTexts.profileReauthenticateTitle,
+          subtitle: AppTexts.profileReauthenticateMessage,
+          confirmButtonText: AppTexts.profileReauthenticateConfirm,
+          cancelButtonText: AppTexts.profileDeleteCancel,
+          onConfirm: (enteredPassword) {
+            Get.back(result: enteredPassword);
+          },
+          onCancel: () => Get.back(result: null),
+        ),
+      );
+
+      if (passwordResult == null) {
+        // User canceled re-authentication
+        return;
+      }
+
+      // Retry deletion with password
+      try {
+        setLoading(true);
+        await _authRepository.deleteAccount(user.value!.id, password: passwordResult);
+        
+        // Navigate to signin screen
+        Get.offAllNamed(AppRoutes.signin);
+        
+        showSuccess(
+          'Account Deleted',
+          subtitle: 'Your account has been permanently deleted.',
+        );
+      } catch (retryError) {
+        setError(retryError.toString());
+        if (retryError.toString().contains('wrong-password') || 
+            retryError.toString().contains('invalid-credential')) {
+          showError('Invalid Password', subtitle: 'The password you entered is incorrect. Please try again.');
+        } else {
+          showError('Delete Failed', subtitle: 'Failed to delete account. Please try again.');
+        }
+      } finally {
+        setLoading(false);
+      }
     } catch (e) {
       setError(e.toString());
       showError('Delete Failed', subtitle: 'Failed to delete account. Please try again.');

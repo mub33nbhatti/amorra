@@ -1,12 +1,12 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter/foundation.dart';
-import '../base_controller.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/config/routes.dart';
-import '../../../core/utils/app_texts/app_texts.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/services/firebase_service.dart';
+import '../../base_controller.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/config/routes.dart';
+import '../../../../core/utils/app_texts/app_texts.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/services/firebase_service.dart';
 
 /// Age Verification Controller
 /// Handles age verification logic with date picker and Firestore sync

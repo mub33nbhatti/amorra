@@ -14,7 +14,6 @@ class UserModel extends BaseModel {
   final bool isAgeVerified;
   final bool isOnboardingCompleted;
   final bool isBlocked;
-  final Map<String, dynamic>? preferences;
 
   UserModel({
     required this.id,
@@ -28,7 +27,6 @@ class UserModel extends BaseModel {
     this.isAgeVerified = false,
     this.isOnboardingCompleted = false,
     this.isBlocked = false,
-    this.preferences,
   });
 
   /// Create UserModel from Firestore document
@@ -45,7 +43,7 @@ class UserModel extends BaseModel {
       isAgeVerified: json['isAgeVerified'] ?? false,
       isOnboardingCompleted: json['isOnboardingCompleted'] ?? false,
       isBlocked: json['isBlocked'] ?? false,
-      preferences: json['preferences'],
+      // Note: preferences are stored in a subcollection, not in the user document
     );
   }
 
@@ -64,7 +62,7 @@ class UserModel extends BaseModel {
       'isAgeVerified': isAgeVerified,
       'isOnboardingCompleted': isOnboardingCompleted,
       'isBlocked': isBlocked,
-      'preferences': preferences,
+      // Note: preferences are stored in a subcollection, not in the user document
     };
   }
 
@@ -81,7 +79,6 @@ class UserModel extends BaseModel {
     bool? isAgeVerified,
     bool? isOnboardingCompleted,
     bool? isBlocked,
-    Map<String, dynamic>? preferences,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -95,7 +92,6 @@ class UserModel extends BaseModel {
       isAgeVerified: isAgeVerified ?? this.isAgeVerified,
       isOnboardingCompleted: isOnboardingCompleted ?? this.isOnboardingCompleted,
       isBlocked: isBlocked ?? this.isBlocked,
-      preferences: preferences ?? this.preferences,
     );
   }
 

@@ -15,7 +15,7 @@ class AppConstants {
   static const String collectionUsers = 'users';
   static const String collectionMessages = 'messages';
   static const String collectionSubscriptions = 'subscriptions';
-  static const String collectionUserPreferences = 'user_preferences';
+  static const String collectionUserPreferences = 'preferences';
   static const String collectionChatSessions = 'chat_sessions';
   static const String collectionDailySuggestions = 'daily_suggestions';
 

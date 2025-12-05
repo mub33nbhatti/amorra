@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/utils/app_colors/app_colors.dart';
-import '../../../core/utils/app_responsive/app_responsive.dart';
-import '../../../core/utils/app_spacing/app_spacing.dart';
-import '../../../core/utils/app_styles/app_text_styles.dart';
-import '../../../core/utils/app_texts/app_texts.dart';
-import '../../../core/config/routes.dart';
+import '../../../../core/utils/app_colors/app_colors.dart';
+import '../../../../core/utils/app_responsive/app_responsive.dart';
+import '../../../../core/utils/app_spacing/app_spacing.dart';
+import '../../../../core/utils/app_styles/app_text_styles.dart';
+import '../../../../core/utils/app_texts/app_texts.dart';
+import '../../../../core/config/routes.dart';
 
 /// Auth Footer Widget
 /// Reusable footer for auth screens

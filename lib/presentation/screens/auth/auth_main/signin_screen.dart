@@ -2,16 +2,16 @@ import 'package:amorra/core/utils/app_images/app_images.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../../../core/utils/app_colors/app_colors.dart';
-import '../../../core/utils/app_responsive/app_responsive.dart';
-import '../../../core/utils/app_spacing/app_spacing.dart';
-import '../../../core/utils/app_texts/app_texts.dart';
-import '../../controllers/auth/signin_controller.dart';
-import '../../widgets/common/app_text_field.dart';
-import '../../widgets/common/app_large_button.dart';
-import '../../widgets/common/app_social_button.dart';
-import '../../widgets/auth/auth_header.dart';
-import '../../widgets/auth/auth_footer.dart';
+import '../../../../core/utils/app_colors/app_colors.dart';
+import '../../../../core/utils/app_responsive/app_responsive.dart';
+import '../../../../core/utils/app_spacing/app_spacing.dart';
+import '../../../../core/utils/app_texts/app_texts.dart';
+import '../../../controllers/auth/auth_main/signin_controller.dart';
+import '../../../widgets/common/app_text_field.dart';
+import '../../../widgets/common/app_large_button.dart';
+import '../../../widgets/common/app_social_button.dart';
+import '../../../widgets/auth/auth_main/auth_header.dart';
+import '../../../widgets/auth/auth_main/auth_footer.dart';
 
 /// Sign In Screen
 class SigninScreen extends GetView<SigninController> {

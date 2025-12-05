@@ -18,6 +18,12 @@ service cloud.firestore {
         && request.auth.uid == userId;
       allow delete: if isAuthenticated()
         && request.auth.uid == userId;
+
+      // User preferences subcollection
+      match /preferences/{preferenceId} {
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        allow write: if isAuthenticated() && request.auth.uid == userId;
+      }
     }
 
     // Messages

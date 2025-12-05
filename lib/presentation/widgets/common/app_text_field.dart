@@ -4,6 +4,7 @@ import '../../../core/utils/app_colors/app_colors.dart';
 import '../../../core/utils/app_responsive/app_responsive.dart';
 import '../../../core/utils/app_spacing/app_spacing.dart';
 import '../../../core/utils/app_styles/app_text_styles.dart';
+import 'app_text_field_error_message.dart';
 
 /// Reusable Text Field Widget
 class AppTextField extends StatefulWidget {
@@ -157,33 +158,7 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
         // Error message display below the field
         if (_errorText != null && _hasInteracted)
-          Padding(
-            padding: EdgeInsets.only(
-              top: AppResponsive.screenHeight(context) * 0.008,
-              left: AppResponsive.screenWidth(context) * 0.01,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: AppResponsive.scaleSize(context, 14),
-                  color: AppColors.error,
-                ),
-                AppSpacing.horizontal(context, 0.01),
-                Expanded(
-                  child: Text(
-                    _errorText!,
-                    style: AppTextStyles.bodyText(context).copyWith(
-                      color: AppColors.error,
-                      fontSize: AppResponsive.scaleSize(context, 12),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          AppTextFieldErrorMessage(errorText: _errorText!),
       ],
     );
   }

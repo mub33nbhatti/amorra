@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/app_colors/app_colors.dart';
-import '../../../core/utils/app_images/app_images.dart';
-import '../../../core/utils/app_responsive/app_responsive.dart';
-import '../../../core/utils/app_spacing/app_spacing.dart';
-import '../../../core/utils/app_styles/app_text_styles.dart';
+import '../../../../core/utils/app_colors/app_colors.dart';
+import '../../../../core/utils/app_images/app_images.dart';
+import '../../../../core/utils/app_responsive/app_responsive.dart';
+import '../../../../core/utils/app_spacing/app_spacing.dart';
+import '../../../../core/utils/app_styles/app_text_styles.dart';
 
 /// Auth Header Widget
 /// Reusable header for auth screens containing Logo, Title, and Subtitle

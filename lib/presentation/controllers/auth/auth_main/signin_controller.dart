@@ -2,13 +2,13 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
-import '../base_controller.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/utils/firebase_error_handler.dart';
-import '../../../core/config/routes.dart' as routes;
-import '../../../core/constants/app_constants.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/services/firebase_service.dart';
+import '../../base_controller.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/firebase_error_handler.dart';
+import '../../../../core/config/routes.dart' as routes;
+import '../../../../core/constants/app_constants.dart';
+import '../../../../data/repositories/auth_repository.dart';
+import '../../../../data/services/firebase_service.dart';
 
 /// Sign In Controller
 /// Handles sign in form logic and validation

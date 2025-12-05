@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../../data/repositories/auth_repository.dart';
-import '../../presentation/controllers/auth/age_verification_controller.dart';
+import '../controllers/auth/age_verification/age_verification_controller.dart';
 
 /// Age Verification Binding
 /// Provides dependencies for Age Verification screen

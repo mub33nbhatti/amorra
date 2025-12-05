@@ -1,11 +1,13 @@
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_storage/get_storage.dart';
-import '../base_controller.dart';
-import '../../../core/config/routes.dart';
-import '../../../core/utils/app_texts/app_texts.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../data/services/firebase_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/config/routes.dart';
+import '../../../../core/utils/app_texts/app_texts.dart';
+import '../../../../data/services/firebase_service.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../base_controller.dart';
+
 
 /// Profile Setup Controller
 /// Handles profile setup form state and validation
@@ -18,7 +20,12 @@ class ProfileSetupController extends BaseController {
   final RxList<String> selectedTopicsToAvoid = <String>[].obs;
   final RxString selectedRelationshipStatus = ''.obs;
   final RxString selectedSupportType = ''.obs;
-  final RxString selectedCheckInFrequency = ''.obs;
+
+  // Error states (for AppTextField-style error display)
+  final RxString toneError = ''.obs;
+  final RxString topicsToAvoidError = ''.obs;
+  final RxString relationshipStatusError = ''.obs;
+  final RxString supportTypeError = ''.obs;
 
   // Available options
   final List<String> toneOptions = [
@@ -51,13 +58,6 @@ class ProfileSetupController extends BaseController {
     AppTexts.supportTypeCompanion,
   ];
 
-  final List<String> checkInFrequencyOptions = [
-    AppTexts.checkInFrequencyDaily,
-    AppTexts.checkInFrequencyFewTimesWeek,
-    AppTexts.checkInFrequencyWeekly,
-    AppTexts.checkInFrequencyAsNeeded,
-  ];
-
   @override
   void onInit() {
     super.onInit();
@@ -70,9 +70,25 @@ class ProfileSetupController extends BaseController {
       final currentUser = _firebaseService.currentUser;
       if (currentUser == null) return;
 
-      // TODO: Load existing preferences from Firestore
-      // This will be implemented when API integration is done
-      // For now, start with empty form
+      // Load existing preferences from Firestore subcollection
+      final prefDoc = await _firebaseService
+          .collection(AppConstants.collectionUsers)
+          .doc(currentUser.uid)
+          .collection(AppConstants.collectionUserPreferences)
+          .doc(currentUser.uid)
+          .get();
+
+      if (prefDoc.exists && prefDoc.data() != null) {
+        final prefs = prefDoc.data()!;
+        selectedTone.value = prefs['conversationTone'] ?? '';
+        selectedTopicsToAvoid.value = List<String>.from(prefs['topicsToAvoid'] ?? []);
+        selectedRelationshipStatus.value = prefs['relationshipStatus'] ?? '';
+        selectedSupportType.value = prefs['supportType'] ?? '';
+        
+        if (kDebugMode) {
+          print('✅ Loaded existing preferences from Firestore');
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error loading preferences: $e');
@@ -83,6 +99,10 @@ class ProfileSetupController extends BaseController {
   /// Update selected tone
   void updateTone(String? tone) {
     selectedTone.value = tone ?? '';
+    // Clear error when user selects a value
+    if (tone != null && tone.isNotEmpty) {
+      toneError.value = '';
+    }
   }
 
   /// Toggle topic to avoid
@@ -92,42 +112,67 @@ class ProfileSetupController extends BaseController {
     } else {
       selectedTopicsToAvoid.add(topic);
     }
+    // Clear error when user selects at least one topic
+    if (selectedTopicsToAvoid.isNotEmpty) {
+      topicsToAvoidError.value = '';
+    }
   }
 
   /// Update relationship status
   void updateRelationshipStatus(String? status) {
     selectedRelationshipStatus.value = status ?? '';
+    // Clear error when user selects a value
+    if (status != null && status.isNotEmpty) {
+      relationshipStatusError.value = '';
+    }
   }
 
   /// Update support type
   void updateSupportType(String? supportType) {
     selectedSupportType.value = supportType ?? '';
-  }
-
-  /// Update check-in frequency
-  void updateCheckInFrequency(String? frequency) {
-    selectedCheckInFrequency.value = frequency ?? '';
+    // Clear error when user selects a value
+    if (supportType != null && supportType.isNotEmpty) {
+      supportTypeError.value = '';
+    }
   }
 
   /// Validate form
+  /// Returns true if all required fields are valid
+  /// Sets error messages in AppTextField style
   bool validateForm() {
+    bool isValid = true;
+
+    // Clear all errors first
+    toneError.value = '';
+    topicsToAvoidError.value = '';
+    relationshipStatusError.value = '';
+    supportTypeError.value = '';
+
+    // Validate conversationTone (required)
     if (selectedTone.value.isEmpty) {
-      showError(
-        'Tone Required',
-        subtitle: 'Please select your preferred conversation tone',
-      );
-      return false;
+      toneError.value = 'Please select your preferred conversation tone';
+      isValid = false;
     }
 
+    // Validate topicsToAvoid (required)
+    if (selectedTopicsToAvoid.isEmpty) {
+      topicsToAvoidError.value = 'Please select at least one topic to avoid';
+      isValid = false;
+    }
+
+    // Validate relationshipStatus (required)
+    if (selectedRelationshipStatus.value.isEmpty) {
+      relationshipStatusError.value = 'Please select your relationship status';
+      isValid = false;
+    }
+
+    // Validate supportType (required)
     if (selectedSupportType.value.isEmpty) {
-      showError(
-        'Support Type Required',
-        subtitle: 'Please select the type of support you are looking for',
-      );
-      return false;
+      supportTypeError.value = 'Please select the type of support you are looking for';
+      isValid = false;
     }
 
-    return true;
+    return isValid;
   }
 
   /// Save preferences and navigate to main
@@ -154,13 +199,8 @@ class ProfileSetupController extends BaseController {
       final preferences = {
         'conversationTone': selectedTone.value,
         'topicsToAvoid': selectedTopicsToAvoid.toList(),
-        'relationshipStatus': selectedRelationshipStatus.value.isEmpty
-            ? null
-            : selectedRelationshipStatus.value,
+        'relationshipStatus': selectedRelationshipStatus.value,
         'supportType': selectedSupportType.value,
-        'checkInFrequency': selectedCheckInFrequency.value.isEmpty
-            ? null
-            : selectedCheckInFrequency.value,
         'updatedAt': DateTime.now().toIso8601String(),
       };
 
@@ -198,23 +238,35 @@ class ProfileSetupController extends BaseController {
     }
   }
 
-  /// Save preferences to Firestore (temporary implementation)
+  /// Save preferences to Firestore subcollection
+  /// Saves to users/{userId}/preferences/{userId}
   /// TODO: Replace with ProfileApiService when API is integrated
   Future<void> _savePreferencesToFirestore(
     String userId,
     Map<String, dynamic> preferences,
   ) async {
-    // For now, save directly to Firestore user document
-    // This will be replaced with API call later
     try {
+      // Save to subcollection: users/{userId}/preferences/{userId}
+      // Using set() with merge: true to create or update (overwrites existing)
       await _firebaseService
           .collection(AppConstants.collectionUsers)
           .doc(userId)
-          .update({
-        'preferences': preferences,
-        'updatedAt': DateTime.now(),
-      });
+          .collection(AppConstants.collectionUserPreferences)
+          .doc(userId)
+          .set({
+        'userId': userId,
+        ...preferences,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (kDebugMode) {
+        print('✅ Preferences saved to Firestore subcollection: users/$userId/preferences/$userId');
+      }
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error saving preferences to Firestore: $e');
+      }
       rethrow;
     }
   }

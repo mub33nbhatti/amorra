@@ -53,11 +53,19 @@ class AppTexts {
   static const String profileSaveName = "Save";
   static const String profileCancelEdit = "Cancel";
   static const String profileLogoutButton = "Logout";
+  static const String profileLogoutTitle = "Logout";
+  static const String profileLogoutMessage = "Are you sure you want to logout? You will need to sign in again to access your account.";
+  static const String profileLogoutConfirm = "Logout";
   static const String profileDeleteAccountButton = "Delete Account";
   static const String profileDeleteAccountTitle = "Delete Account";
   static const String profileDeleteAccountMessage = "Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.";
   static const String profileDeleteConfirm = "Delete";
   static const String profileDeleteCancel = "Cancel";
+  static const String profileReauthenticateTitle = "Re-Auth Required";
+  static const String profileReauthenticateMessage = "For security reasons, please enter your password to confirm account deletion.";
+  static const String profileReauthenticatePasswordLabel = "Password";
+  static const String profileReauthenticatePasswordHint = "Enter your password";
+  static const String profileReauthenticateConfirm = "Confirm";
   static const String profileAgeNotSet = "Not set";
 
   // Onboarding Screens
