@@ -46,8 +46,6 @@ class SubscriptionScreen extends GetView<SubscriptionController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppSpacing.vertical(context, 0.02),
-
                     // Header Section
                     const SubscriptionHeaderSection(),
                     AppSpacing.vertical(context, 0.02),

@@ -27,26 +27,38 @@ class HomeScreen extends GetView<HomeController> {
           children: [
             // Fixed Header
             Padding(
-              padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02).copyWith(bottom: 0),
-              child: const AppScreenHeader(),
+              padding: AppSpacing.symmetric(
+                context,
+                h: 0.04,
+                v: 0.02,
+              ).copyWith(bottom: 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AppScreenHeader(),
+                  AppSpacing.vertical(context, 0.01),
+
+                  // TopSection
+                  HomeTopSection(
+                    userName: controller.userName.value,
+                    greeting: controller.greeting.value,
+                    introText: AppTexts.homeIntroText,
+                  ),
+                ],
+              ),
             ),
 
             // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
-                padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02).copyWith(top: 0),
+                padding: AppSpacing.symmetric(
+                  context,
+                  h: 0.04,
+                  v: 0.02,
+                ).copyWith(top: 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppSpacing.vertical(context, 0.01),
-
-                    // TopSection
-                    HomeTopSection(
-                      userName: controller.userName.value,
-                      greeting: controller.greeting.value,
-                      introText: AppTexts.homeIntroText,
-                    ),
-
                     AppSpacing.vertical(context, 0.02),
 
                     // ChatCtaCard
@@ -62,8 +74,8 @@ class HomeScreen extends GetView<HomeController> {
                     // SuggestionsSection
                     HomeSuggestionsSection(
                       suggestions: controller.dailySuggestions.toList(),
-                      onSuggestionTap: (starterMessage) =>
-                          controller.navigateToChat(starterMessage: starterMessage),
+                      onSuggestionTap: (starterMessage) => controller
+                          .navigateToChat(starterMessage: starterMessage),
                     ),
                   ],
                 ),

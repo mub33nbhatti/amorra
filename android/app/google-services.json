@@ -1,45 +1,37 @@
 {
   "project_info": {
-    "project_number": "918972972138",
-    "project_id": "amorra-bd69f",
-    "storage_bucket": "amorra-bd69f.firebasestorage.app"
+    "project_number": "39064571782",
+    "project_id": "amorraai",
+    "storage_bucket": "amorraai.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:918972972138:android:5ea27eb88e27c05e325e13",
+        "mobilesdk_app_id": "1:39064571782:android:226cad07c7231478876607",
         "android_client_info": {
           "package_name": "com.example.amorra"
         }
       },
       "oauth_client": [
         {
-          "client_id": "918972972138-dt4nqhdcdet43updu0r4fj2bbpsbt31e.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.amorra",
-            "certificate_hash": "135931b2353259d75a7af3853322cb4f7b5ff4f2"
-          }
-        },
-        {
-          "client_id": "918972972138-c5pdm4abhamveccr54f4ld65kup9unmg.apps.googleusercontent.com",
+          "client_id": "39064571782-sh2fq4jo5ls3v4tppp4tgcldlp43vvvn.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyA_F7mkrFBglandbPoCWTbxbiDZ3Tsob34"
+          "current_key": "AIzaSyCUYjqMy_mSVKzk4-lEiYZ8ezUDcMahdPE"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "918972972138-c5pdm4abhamveccr54f4ld65kup9unmg.apps.googleusercontent.com",
+              "client_id": "39064571782-sh2fq4jo5ls3v4tppp4tgcldlp43vvvn.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "918972972138-5af0u61hiponfhpbsjblgluvkm6bv68d.apps.googleusercontent.com",
+              "client_id": "39064571782-6eg51dv9lc6jg6sinbrbak0gdh2gobvf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.example.amorra"

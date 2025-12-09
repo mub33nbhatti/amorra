@@ -47,29 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAO5rGnnBNepOO7qpcvMQWEN6n0PRpFqNo',
-    appId: '1:918972972138:web:706dc0ec074183a1325e13',
-    messagingSenderId: '918972972138',
-    projectId: 'amorra-bd69f',
-    authDomain: 'amorra-bd69f.firebaseapp.com',
-    storageBucket: 'amorra-bd69f.firebasestorage.app',
-    measurementId: 'G-H6B9L6EHGC',
+    apiKey: 'AIzaSyB9AR1kTcMbQctDCwG2esCHUEoPxyB4MBQ',
+    appId: '1:39064571782:web:8c3cc79d8ca36d60876607',
+    messagingSenderId: '39064571782',
+    projectId: 'amorraai',
+    authDomain: 'amorraai.firebaseapp.com',
+    storageBucket: 'amorraai.firebasestorage.app',
+    measurementId: 'G-DF3JNN2WM4',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA_F7mkrFBglandbPoCWTbxbiDZ3Tsob34',
-    appId: '1:918972972138:android:5ea27eb88e27c05e325e13',
-    messagingSenderId: '918972972138',
-    projectId: 'amorra-bd69f',
-    storageBucket: 'amorra-bd69f.firebasestorage.app',
+    apiKey: 'AIzaSyCUYjqMy_mSVKzk4-lEiYZ8ezUDcMahdPE',
+    appId: '1:39064571782:android:226cad07c7231478876607',
+    messagingSenderId: '39064571782',
+    projectId: 'amorraai',
+    storageBucket: 'amorraai.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCNJ71KT1OBvwjkNoR44XOq1ZZ44qS68zs',
-    appId: '1:918972972138:ios:37cf5f4756ff112a325e13',
-    messagingSenderId: '918972972138',
-    projectId: 'amorra-bd69f',
-    storageBucket: 'amorra-bd69f.firebasestorage.app',
+    apiKey: 'AIzaSyAmydeJI0i9vY9SWzNBMyEQXd_0zI2xIwQ',
+    appId: '1:39064571782:ios:40b8b197a7d3d007876607',
+    messagingSenderId: '39064571782',
+    projectId: 'amorraai',
+    storageBucket: 'amorraai.firebasestorage.app',
     iosBundleId: 'com.example.amorra',
   );
 }

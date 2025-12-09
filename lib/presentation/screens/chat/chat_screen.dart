@@ -57,10 +57,10 @@ class ChatScreen extends GetView<ChatController> {
                   children: [
                     // Dummy messages at the top
                     const ChatDummyMessages(),
-                    
+
                     // Actual messages (if any) with date labels
                     ..._buildMessagesWithDateLabels(context),
-                    
+
                     // Typing indicator
                     if (controller.isTyping.value)
                       Padding(
@@ -71,11 +71,12 @@ class ChatScreen extends GetView<ChatController> {
                           children: [
                             Container(
                               constraints: BoxConstraints(
-                                maxWidth: AppResponsive.screenWidth(context) * 0.7,
+                                maxWidth:
+                                    AppResponsive.screenWidth(context) * 0.7,
                               ),
                               padding: AppSpacing.symmetric(
                                 context,
-                                h: 0.02,
+                                h: 0.04,
                                 v: 0.01,
                               ),
                               decoration: BoxDecoration(
@@ -100,9 +101,10 @@ class ChatScreen extends GetView<ChatController> {
                           ],
                         ),
                       ),
-                    
+
                     // Empty state at the bottom
-                    if (controller.messages.isEmpty && !controller.isTyping.value)
+                    if (controller.messages.isEmpty &&
+                        !controller.isTyping.value)
                       const ChatEmptyState(),
                   ],
                 );
@@ -155,9 +157,7 @@ class ChatScreen extends GetView<ChatController> {
 
       // Check if we need to show a date tag
       if (previousDate == null || !_isSameDay(previousDate, messageDate)) {
-        widgets.add(
-          ChatDateLabel(date: messageDate, showDividers: true),
-        );
+        widgets.add(ChatDateLabel(date: messageDate, showDividers: true));
         previousDate = messageDate;
       }
 
@@ -167,9 +167,7 @@ class ChatScreen extends GetView<ChatController> {
           index == controller.messages.length - 1 ||
           (index > 0 &&
               message.timestamp
-                      .difference(
-                        controller.messages[index - 1].timestamp,
-                      )
+                      .difference(controller.messages[index - 1].timestamp)
                       .inMinutes >
                   5);
 
@@ -199,5 +197,4 @@ class ChatScreen extends GetView<ChatController> {
         date1.month == date2.month &&
         date1.day == date2.day;
   }
-
 }

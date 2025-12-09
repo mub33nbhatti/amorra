@@ -50,7 +50,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
     final canSend = hasText && !widget.isLimitReached && widget.onSend != null;
 
     return Container(
-      padding: AppSpacing.symmetric(context, h: 0.02, v: 0.005),
+      padding: AppSpacing.symmetric(context, h: 0.04, v: 0).copyWith(left: 0),
       child: SafeArea(
         top: false,
         child: Row(
@@ -76,8 +76,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
                   ).copyWith(color: AppColors.grey),
                   contentPadding: AppSpacing.symmetric(
                     context,
-                    h: 0.03,
-                    v: 0.02,
+                    h: 0.04,
+                    v: 0.01,
                   ),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,

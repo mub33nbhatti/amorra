@@ -2,18 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>39064571782-6eg51dv9lc6jg6sinbrbak0gdh2gobvf.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.39064571782-6eg51dv9lc6jg6sinbrbak0gdh2gobvf</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCNJ71KT1OBvwjkNoR44XOq1ZZ44qS68zs</string>
+	<string>AIzaSyAmydeJI0i9vY9SWzNBMyEQXd_0zI2xIwQ</string>
 	<key>GCM_SENDER_ID</key>
-	<string>918972972138</string>
+	<string>39064571782</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.example.amorra</string>
 	<key>PROJECT_ID</key>
-	<string>amorra-bd69f</string>
+	<string>amorraai</string>
 	<key>STORAGE_BUCKET</key>
-	<string>amorra-bd69f.firebasestorage.app</string>
+	<string>amorraai.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:918972972138:ios:37cf5f4756ff112a325e13</string>
+	<string>1:39064571782:ios:40b8b197a7d3d007876607</string>
 </dict>
 </plist>
