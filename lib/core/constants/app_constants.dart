@@ -35,7 +35,7 @@ class AppConstants {
   static const String errorNetwork = 'Network error. Please check your connection.';
   static const String errorAuth = 'Authentication failed. Please login again.';
   static const String errorSubscription = 'Subscription error. Please try again.';
-  static const String errorAgeVerification = 'You must be 18 or older to use this app.';
+  static const String errorAgeVerification = 'You must be 40 or older to use this app.';
 
   // Success Messages
   static const String successAgeVerified = 'Age verified successfully';
@@ -44,7 +44,7 @@ class AppConstants {
   static const String successMessageSent = 'Message sent';
 
   // Age Verification
-  static const int minimumAge = 18;
+  static const int minimumAge = 40;
 
   // Validation
   static const int minPasswordLength = 6;

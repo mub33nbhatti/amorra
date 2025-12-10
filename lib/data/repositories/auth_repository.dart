@@ -46,6 +46,17 @@ class AuthRepository {
     _pendingGoogleCredential = null;
   }
 
+  /// Get configured GoogleSignIn instance
+  /// Web client ID is required for Android Google Sign-In
+  /// This is the Web Client ID from Firebase Console > Authentication > Sign-in method > Google
+  GoogleSignIn _getGoogleSignIn() {
+    return GoogleSignIn(
+      scopes: ['email', 'profile'],
+      // Web client ID from Firebase Console Google Sign-in configuration
+      serverClientId: '39064571782-sh2fq4jo5ls3v4tppp4tgcldlp43vvvn.apps.googleusercontent.com',
+    );
+  }
+
   /// Normalize email to lowercase and trim whitespace
   String _normalizeEmail(String email) {
     return email.toLowerCase().trim();
@@ -466,7 +477,7 @@ class AuthRepository {
     try {
       await _firebaseService.signOut();
 
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = _getGoogleSignIn();
       await googleSignIn.signOut();
 
       clearPendingGoogleCredential();
@@ -519,7 +530,7 @@ class AuthRepository {
         throw Exception('No user is currently signed in');
       }
 
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = _getGoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -608,7 +619,7 @@ class AuthRepository {
         print('🚀 Starting Google sign-in');
       }
 
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignIn googleSignIn = _getGoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
@@ -1071,7 +1082,7 @@ class AuthRepository {
 
       // Step 3: Sign out from Google if applicable
       try {
-        final GoogleSignIn googleSignIn = GoogleSignIn();
+        final GoogleSignIn googleSignIn = _getGoogleSignIn();
         await googleSignIn.signOut();
       } catch (e) {
         if (kDebugMode) {

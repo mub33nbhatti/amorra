@@ -38,14 +38,14 @@ class NotFoundScreen extends StatelessWidget {
             ),),
             AppSpacing.vertical(context, 0.02),
             Text(
-              'Page Not Found',
+              'Screen Not Found',
               style: AppTextStyles.bodyText(context).copyWith(
                 color: AppColors.black,
                 fontSize: AppResponsive.scaleSize(context, 20),
               ),
             ),
             Text(
-              'The page you are looking for does not exist.',
+              'The screen you are looking for does not exist.',
               style: AppTextStyles.bodyText(context).copyWith(
                 color: AppColors.black,
                 fontSize: AppResponsive.scaleSize(context, 14),

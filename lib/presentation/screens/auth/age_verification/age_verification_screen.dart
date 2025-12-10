@@ -15,7 +15,7 @@ import 'package:amorra/presentation/widgets/auth/auth_main/auth_header.dart';
 import 'package:amorra/presentation/widgets/auth/age_verification/age_display.dart';
 
 /// Age Verification Screen
-/// Mandatory screen for age verification (18+)
+/// Mandatory screen for age verification (40+)
 class AgeVerificationScreen extends GetView<AgeVerificationController> {
   const AgeVerificationScreen({super.key});
 
@@ -38,15 +38,21 @@ class AgeVerificationScreen extends GetView<AgeVerificationController> {
               // Step Indicator (Step 1 of 2) - Full width, equally split
               AppDotsIndicator(
                 totalPages: 2,
-                currentPage: 0, // Step 1 (Age Verification)
+                currentPage: 0,
+                // Step 1 (Age Verification)
                 fullWidth: true,
-                activeColor: AppColors.primary, // Completed steps
+                activeColor: AppColors.primary,
+                // Completed steps
                 inactiveColor: AppColors.secondary, // Remaining steps
               ),
 
               // Auth Header
               Padding(
-                padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02).copyWith(bottom: 0),
+                padding: AppSpacing.symmetric(
+                  context,
+                  h: 0.04,
+                  v: 0.02,
+                ).copyWith(bottom: 0),
                 child: AuthHeader(
                   title: AppTexts.ageVerificationTitle,
                   subtitle: AppTexts.ageVerificationSubtitle,
@@ -54,37 +60,40 @@ class AgeVerificationScreen extends GetView<AgeVerificationController> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02).copyWith(top: 0),
+                  padding: AppSpacing.symmetric(
+                    context,
+                    h: 0.04,
+                    v: 0.02,
+                  ).copyWith(top: 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Date of Birth Label
+                      Text(
+                        AppTexts.birthdayLabel,
+                        style: AppTextStyles.bodyText(context).copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.black,
+                        ),
+                      ),
+                      AppSpacing.vertical(context, 0.01),
 
-                // Date of Birth Label
-                Text(
-                  AppTexts.birthdayLabel,
-                  style: AppTextStyles.bodyText(context).copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
-                  ),
-                ),
-                AppSpacing.vertical(context, 0.01),
+                      // Date Picker
+                      AppDatePicker(
+                        initialDate: controller.selectedDate.value,
+                        firstDate: DateTime(DateTime.now().year - 120, 1, 1),
+                        lastDate: DateTime.now(),
+                        onDateChanged: controller.updateSelectedDate,
+                      ),
+                      AppSpacing.vertical(context, 0.02),
 
-                // Date Picker
-                AppDatePicker(
-                  initialDate: controller.selectedDate.value,
-                  firstDate: DateTime(DateTime.now().year - 120, 1, 1),
-                  lastDate: DateTime.now(),
-                  onDateChanged: controller.updateSelectedDate,
-                ),
-                AppSpacing.vertical(context, 0.02),
-
-                // Age Display
-                Obx(
-                  () => AgeDisplay(
-                    age: controller.calculatedAge.value,
-                    isValidAge: controller.isValidAge.value,
-                  ),
-                ),
+                      // Age Display
+                      Obx(
+                        () => AgeDisplay(
+                          age: controller.calculatedAge.value,
+                          isValidAge: controller.isValidAge.value,
+                        ),
+                      ),
 
                       // Error Message
                       Obx(
@@ -103,7 +112,9 @@ class AgeVerificationScreen extends GetView<AgeVerificationController> {
                       Obx(
                         () => AppLargeButton(
                           text: AppTexts.verifyAgeButton,
-                          onPressed: controller.isValidAge.value && controller.isDateSelected.value
+                          onPressed:
+                              controller.isValidAge.value &&
+                                  controller.isDateSelected.value
                               ? controller.verifyAge
                               : null,
                           isLoading: controller.isLoading.value,
@@ -120,4 +131,3 @@ class AgeVerificationScreen extends GetView<AgeVerificationController> {
     );
   }
 }
-

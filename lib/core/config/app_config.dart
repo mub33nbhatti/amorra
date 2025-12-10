@@ -27,7 +27,7 @@ class AppConfig {
   static const Duration typingIndicatorDuration = Duration(milliseconds: 1500);
 
   // Age Verification
-  static const int minimumAge = 18;
+  static const int minimumAge = 40;
 
   // Retry Configuration
   static const int maxRetryAttempts = 3;

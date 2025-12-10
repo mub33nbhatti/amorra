@@ -13,14 +13,14 @@ class UserAvatar extends StatelessWidget {
   /// Get avatar image based on age
   String _getAvatarImage() {
     if (age == null) {
-      return AppImages.teenAge; // Default
+      return AppImages.avatarAge40; // Default
     }
-    if (age! >= 60) {
-      return AppImages.oldAge;
-    } else if (age! >= 40) {
-      return AppImages.midAge;
+    if (age! >= 70) {
+      return AppImages.avatarAge70;
+    } else if (age! >= 60) {
+      return AppImages.avatarAge60;
     } else {
-      return AppImages.teenAge;
+      return AppImages.avatarAge40;
     }
   }
 

@@ -18,7 +18,7 @@ class AppTexts {
   static const String passwordLabel = "Password";
   static const String passwordHint = "Enter your password";
   static const String ageVerificationText =
-      "I confirm that I am 18 years or older";
+      "I confirm that I am 40 years or older";
   static const String registerButton = "Register";
   static const String termsPrefix = "By registering you agree to ";
   static const String termsLink = "Terms & Conditions";
@@ -96,8 +96,8 @@ class AppTexts {
   static const String birthdayLabel = "Date of Birth";
   static const String ageLabel = "Age";
   static const String verifyAgeButton = "Verify Age";
-  static const String ageVerificationErrorUnder18 =
-      "You must be 18 or older to use this app";
+  static const String ageVerificationErrorUnder40 =
+      "You must be 40 or older to use this app";
   static const String ageVerificationErrorInvalid =
       "Please enter a valid date of birth";
   static const String ageVerificationErrorMaxAge =

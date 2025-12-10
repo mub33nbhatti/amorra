@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "39064571782-bpi9f4lfcgct9obst13bi23t69gkdjvl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amorra",
+            "certificate_hash": "135931b2353259d75a7af3853322cb4f7b5ff4f2"
+          }
+        },
+        {
+          "client_id": "39064571782-lgvkljpcdrsa45fctigea9l5mjd3ib96.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.amorra",
+            "certificate_hash": "e57b6a9b5b2a78e6a598435d85eae4fd3732a535"
+          }
+        },
+        {
           "client_id": "39064571782-sh2fq4jo5ls3v4tppp4tgcldlp43vvvn.apps.googleusercontent.com",
           "client_type": 3
         }

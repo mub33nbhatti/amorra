@@ -105,7 +105,7 @@ class AgeVerificationController extends BaseController {
     _validateAge(age);
   }
 
-  /// Validate age (must be between 18 and 120)
+  /// Validate age (must be between 40 and 120)
   void _validateAge(int age) {
     if (age == 0) {
       // No date selected yet - don't show error, just keep invalid
@@ -113,7 +113,7 @@ class AgeVerificationController extends BaseController {
       ageError.value = '';
     } else if (age < AppConstants.minimumAge) {
       isValidAge.value = false;
-      ageError.value = AppTexts.ageVerificationErrorUnder18;
+      ageError.value = AppTexts.ageVerificationErrorUnder40;
     } else if (age > 120) {
       isValidAge.value = false;
       ageError.value = AppTexts.ageVerificationErrorMaxAge;

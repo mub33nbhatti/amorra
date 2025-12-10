@@ -189,8 +189,8 @@ class Validators {
       return 'Age must be at least 1';
     }
     
-    if (age < 18) {
-      return 'You must be 18 years or older to use this app';
+    if (age < 40) {
+      return 'You must be 40 years or older to use this app';
     }
     
     // Check maximum age (reasonable limit)
