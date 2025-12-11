@@ -1,9 +1,11 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// API Constants
 /// Contains API endpoints and configuration
 class ApiConstants {
-  // Base URLs
-  static const String baseUrl = 'https://api.amorra.app'; // Replace with actual API URL
-  static const String aiApiBaseUrl = 'https://api.openai.com/v1'; // Replace with your AI provider
+  // Base URLs - Load from environment variables with fallback defaults
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://api.amorra.app';
+  static String get aiApiBaseUrl => dotenv.env['AI_API_BASE_URL'] ?? 'https://api.openai.com/v1';
 
   // API Endpoints
   static const String endpointChat = '/chat/completions';

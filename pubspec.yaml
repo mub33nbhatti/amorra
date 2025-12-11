@@ -115,6 +115,7 @@ flutter:
     - assets/images/logo/
     - assets/images/onboarding/
     - assets/images/common/
+    - .env
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg

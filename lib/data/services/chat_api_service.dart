@@ -1,3 +1,5 @@
+import 'package:amorra/core/config/app_config.dart';
+
 /// Chat API Service
 /// Placeholder service for chat-related API calls
 /// TODO: Replace all methods with actual API endpoints when backend is ready
@@ -77,6 +79,8 @@ class ChatApiService {
   /// TODO: Replace with actual GET endpoint
   /// Expected endpoint: GET /api/chat/limit/{userId}
   /// Response: { "remaining": number, "limit": number, "resetAt": timestamp }
+  /// Note: This should check if user is within free trial period
+  /// If within trial, return 999 (unlimited indicator)
   Future<int> checkDailyLimit(String userId) async {
     // TODO: Replace with actual API call
     // Example implementation:
@@ -85,10 +89,16 @@ class ChatApiService {
     // );
     // final data = jsonDecode(response.body);
     // return data['remaining'] ?? 0;
+    // 
+    // The API should check:
+    // 1. If user is subscribed -> return 999 (unlimited)
+    // 2. If user is within 7-day free trial -> return 999 (unlimited)
+    // 3. Otherwise -> return remaining messages from daily limit
 
-    // Placeholder return (default to 10 for free tier)
+    // Placeholder return (default to free tier limit)
+    // In production, this should check free trial status from backend
     await Future.delayed(const Duration(milliseconds: 200));
-    return 10;
+    return AppConfig.freeMessageLimit;
   }
 }
 

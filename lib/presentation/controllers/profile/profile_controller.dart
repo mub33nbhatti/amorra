@@ -7,6 +7,7 @@ import 'package:amorra/core/config/routes.dart';
 import 'package:amorra/core/config/app_config.dart';
 import 'package:amorra/core/utils/app_colors/app_colors.dart';
 import 'package:amorra/core/utils/app_texts/app_texts.dart';
+import 'package:amorra/core/utils/free_trial_utils.dart';
 import 'package:amorra/core/utils/validators.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
@@ -26,9 +27,20 @@ class ProfileController extends BaseController {
   final RxString editedName = ''.obs;
   final RxBool showNameUpdateAnimation = false.obs;
   final TextEditingController nameController = TextEditingController();
+  final RxBool isLogoutLoading = false.obs;
+  final RxBool isDeleteAccountLoading = false.obs;
 
   // Get AuthController
-  AuthController get _authController => Get.find<AuthController>();
+  AuthController? get _authController {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        return Get.find<AuthController>();
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   // Get SubscriptionController
   SubscriptionController? get _subscriptionController {
@@ -56,7 +68,15 @@ class ProfileController extends BaseController {
   void _setupUserListener() {
     try {
       // Listen to currentUser changes reactively
-      ever(_authController.currentUser, (UserModel? updatedUser) {
+      final authController = _authController;
+      if (authController == null) {
+        if (kDebugMode) {
+          print('⚠️ AuthController not available in ProfileController');
+        }
+        return;
+      }
+      
+      ever(authController.currentUser, (UserModel? updatedUser) {
         if (updatedUser != null) {
           user.value = updatedUser;
           editedName.value = updatedUser.name;
@@ -67,10 +87,10 @@ class ProfileController extends BaseController {
       });
 
       // Set initial user if available
-      if (_authController.currentUser.value != null) {
-        user.value = _authController.currentUser.value;
-        editedName.value = _authController.currentUser.value!.name;
-        nameController.text = _authController.currentUser.value!.name;
+      if (authController.currentUser.value != null) {
+        user.value = authController.currentUser.value;
+        editedName.value = authController.currentUser.value!.name;
+        nameController.text = authController.currentUser.value!.name;
       }
     } catch (e) {
       if (kDebugMode) {
@@ -83,7 +103,16 @@ class ProfileController extends BaseController {
   Future<void> _loadUserData() async {
     try {
       setLoading(true);
-      final currentUser = _authController.currentUser.value;
+      final authController = _authController;
+      if (authController == null) {
+        if (kDebugMode) {
+          print('⚠️ AuthController not available, cannot load user data');
+        }
+        setError('AuthController not available');
+        return;
+      }
+      
+      final currentUser = authController.currentUser.value;
       if (currentUser != null) {
         user.value = currentUser;
         editedName.value = currentUser.name;
@@ -93,7 +122,7 @@ class ProfileController extends BaseController {
         final fetchedUser = await _authRepository.getCurrentUser();
         if (fetchedUser != null) {
           user.value = fetchedUser;
-          _authController.currentUser.value = fetchedUser;
+          authController.currentUser.value = fetchedUser;
           editedName.value = fetchedUser.name;
           nameController.text = fetchedUser.name;
         }
@@ -149,7 +178,11 @@ class ProfileController extends BaseController {
         updatedAt: DateTime.now(),
       );
 
-      await _authController.updateUser(updatedUser);
+      final authController = _authController;
+      if (authController == null) {
+        throw Exception('AuthController not available');
+      }
+      await authController.updateUser(updatedUser);
       isEditingName.value = false;
       editedName.value = newName;
 
@@ -189,8 +222,12 @@ class ProfileController extends BaseController {
     if (confirmed != true) return;
 
     try {
-      setLoading(true);
-      await _authController.signOut();
+      isLogoutLoading.value = true;
+      final authController = _authController;
+      if (authController == null) {
+        throw Exception('AuthController not available');
+      }
+      await authController.signOut();
 
       // Navigate to signin screen
       Get.offAllNamed(AppRoutes.signin);
@@ -201,7 +238,7 @@ class ProfileController extends BaseController {
         subtitle: 'Failed to logout. Please try again.',
       );
     } finally {
-      setLoading(false);
+      isLogoutLoading.value = false;
     }
   }
 
@@ -226,7 +263,7 @@ class ProfileController extends BaseController {
     if (confirmed != true) return;
 
     try {
-      setLoading(true);
+      isDeleteAccountLoading.value = true;
       await _authRepository.deleteAccount(user.value!.id);
 
       // Navigate to signin screen
@@ -237,7 +274,7 @@ class ProfileController extends BaseController {
         subtitle: 'Your account has been permanently deleted.',
       );
     } on ReauthenticationRequiredException {
-      setLoading(false);
+      isDeleteAccountLoading.value = false;
 
       // Show password dialog for re-authentication
       final passwordResult = await Get.dialog<String>(
@@ -325,17 +362,49 @@ class ProfileController extends BaseController {
 
   /// Get remaining free messages
   int get remainingFreeMessages {
+    final currentUser = user.value;
+    final isInTrial = currentUser != null && FreeTrialUtils.isWithinFreeTrial(currentUser);
+    
+    // If in free trial, return unlimited indicator
+    if (isInTrial) return 999;
+    
     return _subscriptionController?.remainingFreeMessages.value ??
         AppConfig.freeMessageLimit;
   }
 
   /// Get used messages (for progress indicator)
   int get usedMessages {
+    final currentUser = user.value;
+    final isInTrial = currentUser != null && FreeTrialUtils.isWithinFreeTrial(currentUser);
+    
+    // If in free trial, return 0 (no usage tracking)
+    if (isInTrial) return 0;
+    
     return AppConfig.freeDailyLimit - remainingFreeMessages;
   }
 
   /// Get daily limit
-  int get dailyLimit => AppConfig.freeDailyLimit;
+  int get dailyLimit {
+    final currentUser = user.value;
+    final isInTrial = currentUser != null && FreeTrialUtils.isWithinFreeTrial(currentUser);
+    
+    // If in free trial, return unlimited indicator
+    if (isInTrial) return 999;
+    
+    return AppConfig.freeDailyLimit;
+  }
+
+  /// Check if user is within free trial
+  bool get isWithinFreeTrial {
+    final currentUser = user.value;
+    return currentUser != null && FreeTrialUtils.isWithinFreeTrial(currentUser);
+  }
+
+  /// Get days remaining in free trial
+  int get freeTrialDaysRemaining {
+    final currentUser = user.value;
+    return FreeTrialUtils.getDaysRemainingInTrial(currentUser);
+  }
 
   /// Get next billing date (if subscribed)
   DateTime? get nextBillingDate {

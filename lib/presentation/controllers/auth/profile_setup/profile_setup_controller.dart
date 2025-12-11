@@ -30,7 +30,7 @@ class ProfileSetupController extends BaseController {
   final RxString selectedInterestedIn = ''.obs;
   final RxString selectedDailyRoutine = ''.obs;
   final RxString selectedAiCommunication = ''.obs;
-  final RxList<String> selectedBiggestChallenge = <String>[].obs;
+  final RxString selectedBiggestChallenge = ''.obs;
   final RxString selectedTimeDedication = ''.obs;
   final RxString selectedAiToolsFamiliarity = ''.obs;
   final RxString selectedStressResponse = ''.obs;
@@ -172,14 +172,23 @@ class ProfileSetupController extends BaseController {
       if (prefDoc.exists && prefDoc.data() != null) {
         final prefs = prefDoc.data()!;
         selectedTone.value = prefs['conversationTone'] ?? '';
-        selectedTopicsToAvoid.value = List<String>.from(prefs['topicsToAvoid'] ?? []);
+        // Handle topicsToAvoid - can be string (old format) or list (new format)
+        final topicsToAvoidValue = prefs['topicsToAvoid'];
+        if (topicsToAvoidValue is List) {
+          selectedTopicsToAvoid.value = List<String>.from(topicsToAvoidValue);
+        } else if (topicsToAvoidValue is String && topicsToAvoidValue.isNotEmpty) {
+          // Backward compatibility: convert old string format to list
+          selectedTopicsToAvoid.value = [topicsToAvoidValue];
+        } else {
+          selectedTopicsToAvoid.value = [];
+        }
         selectedRelationshipStatus.value = prefs['relationshipStatus'] ?? '';
         selectedSupportType.value = prefs['supportType'] ?? '';
         selectedSexualOrientation.value = prefs['sexualOrientation'] ?? '';
         selectedInterestedIn.value = prefs['interestedIn'] ?? '';
         selectedDailyRoutine.value = prefs['dailyRoutine'] ?? '';
         selectedAiCommunication.value = prefs['aiCommunication'] ?? '';
-        selectedBiggestChallenge.value = List<String>.from(prefs['biggestChallenge'] ?? []);
+        selectedBiggestChallenge.value = prefs['biggestChallenge'] ?? '';
         selectedTimeDedication.value = prefs['timeDedication'] ?? '';
         selectedAiToolsFamiliarity.value = prefs['aiToolsFamiliarity'] ?? '';
         selectedStressResponse.value = prefs['stressResponse'] ?? '';
@@ -205,17 +214,22 @@ class ProfileSetupController extends BaseController {
     }
   }
 
-  /// Toggle topic to avoid
-  void toggleTopicToAvoid(String topic) {
-    final currentList = List<String>.from(selectedTopicsToAvoid);
-    if (currentList.contains(topic)) {
-      currentList.remove(topic);
-    } else {
-      currentList.add(topic);
+  /// Update topic to avoid (multiple selection - toggle)
+  void updateTopicToAvoid(String? topic) {
+    if (topic == null || topic.isEmpty) {
+      // Don't clear all - this shouldn't happen in multiple selection
+      // If null is passed, just return without doing anything
+      return;
     }
-    // Use assignAll to trigger reactivity properly
-    selectedTopicsToAvoid.assignAll(currentList);
-    // Clear error when user selects at least one topic
+    
+    // Toggle: if already selected, remove it; if not selected, add it
+    if (selectedTopicsToAvoid.contains(topic)) {
+      selectedTopicsToAvoid.remove(topic);
+    } else {
+      selectedTopicsToAvoid.add(topic);
+    }
+    
+    // Clear error when user makes a selection
     if (selectedTopicsToAvoid.isNotEmpty) {
       topicsToAvoidError.value = '';
     }
@@ -271,17 +285,11 @@ class ProfileSetupController extends BaseController {
     }
   }
 
-  /// Toggle biggest challenge
-  void toggleBiggestChallenge(String challenge) {
-    final currentList = List<String>.from(selectedBiggestChallenge);
-    if (currentList.contains(challenge)) {
-      currentList.remove(challenge);
-    } else {
-      currentList.add(challenge);
-    }
-    // Use assignAll to trigger reactivity properly
-    selectedBiggestChallenge.assignAll(currentList);
-    if (selectedBiggestChallenge.isNotEmpty) {
+  /// Update biggest challenge
+  void updateBiggestChallenge(String? challenge) {
+    selectedBiggestChallenge.value = challenge ?? '';
+    // Clear error when user selects a value
+    if (challenge != null && challenge.isNotEmpty) {
       biggestChallengeError.value = '';
     }
   }
@@ -318,6 +326,23 @@ class ProfileSetupController extends BaseController {
     }
   }
 
+  /// Check if there are any validation errors
+  bool get hasErrors {
+    return toneError.value.isNotEmpty ||
+        topicsToAvoidError.value.isNotEmpty ||
+        relationshipStatusError.value.isNotEmpty ||
+        supportTypeError.value.isNotEmpty ||
+        sexualOrientationError.value.isNotEmpty ||
+        interestedInError.value.isNotEmpty ||
+        dailyRoutineError.value.isNotEmpty ||
+        aiCommunicationError.value.isNotEmpty ||
+        biggestChallengeError.value.isNotEmpty ||
+        timeDedicationError.value.isNotEmpty ||
+        aiToolsFamiliarityError.value.isNotEmpty ||
+        stressResponseError.value.isNotEmpty ||
+        aiHonestyError.value.isNotEmpty;
+  }
+
   /// Validate form
   /// Returns true if all required fields are valid
   /// Sets error messages in AppTextField style
@@ -341,37 +366,37 @@ class ProfileSetupController extends BaseController {
 
     // Validate conversationTone (required)
     if (selectedTone.value.isEmpty) {
-      toneError.value = 'Please select your preferred conversation tone';
+      toneError.value = AppTexts.profileSetupErrorTone;
       isValid = false;
     }
 
-    // Validate topicsToAvoid (required)
+    // Validate topicsToAvoid (required - must have at least one selection)
     if (selectedTopicsToAvoid.isEmpty) {
-      topicsToAvoidError.value = 'Please select at least one topic to avoid';
+      topicsToAvoidError.value = AppTexts.profileSetupErrorTopicsToAvoid;
       isValid = false;
     }
 
     // Validate relationshipStatus (required)
     if (selectedRelationshipStatus.value.isEmpty) {
-      relationshipStatusError.value = 'Please select your relationship status';
+      relationshipStatusError.value = AppTexts.profileSetupErrorRelationshipStatus;
       isValid = false;
     }
 
     // Validate supportType (required)
     if (selectedSupportType.value.isEmpty) {
-      supportTypeError.value = 'Please select the type of support you are looking for';
+      supportTypeError.value = AppTexts.profileSetupErrorSupportType;
       isValid = false;
     }
 
     // Validate sexualOrientation (required)
     if (selectedSexualOrientation.value.isEmpty) {
-      sexualOrientationError.value = 'Please select your sexual orientation';
+      sexualOrientationError.value = AppTexts.profileSetupErrorSexualOrientation;
       isValid = false;
     }
 
     // Validate interestedIn (required)
     if (selectedInterestedIn.value.isEmpty) {
-      interestedInError.value = 'Please select who you are interested in';
+      interestedInError.value = AppTexts.profileSetupErrorInterestedIn;
       isValid = false;
     }
 
@@ -379,37 +404,37 @@ class ProfileSetupController extends BaseController {
 
     // Validate aiCommunication (required)
     if (selectedAiCommunication.value.isEmpty) {
-      aiCommunicationError.value = 'Please select your preferred communication style';
+      aiCommunicationError.value = AppTexts.profileSetupErrorAiCommunication;
       isValid = false;
     }
 
     // Validate biggestChallenge (required)
-    if (selectedBiggestChallenge.isEmpty) {
-      biggestChallengeError.value = 'Please select at least one challenge';
+    if (selectedBiggestChallenge.value.isEmpty) {
+      biggestChallengeError.value = AppTexts.profileSetupErrorBiggestChallenge;
       isValid = false;
     }
 
     // Validate timeDedication (required)
     if (selectedTimeDedication.value.isEmpty) {
-      timeDedicationError.value = 'Please select how much time you can dedicate';
+      timeDedicationError.value = AppTexts.profileSetupErrorTimeDedication;
       isValid = false;
     }
 
     // Validate aiToolsFamiliarity (required)
     if (selectedAiToolsFamiliarity.value.isEmpty) {
-      aiToolsFamiliarityError.value = 'Please select your familiarity with AI tools';
+      aiToolsFamiliarityError.value = AppTexts.profileSetupErrorAiToolsFamiliarity;
       isValid = false;
     }
 
     // Validate stressResponse (required)
     if (selectedStressResponse.value.isEmpty) {
-      stressResponseError.value = 'Please select how you respond to stress';
+      stressResponseError.value = AppTexts.profileSetupErrorStressResponse;
       isValid = false;
     }
 
     // Validate aiHonesty (required)
     if (selectedAiHonesty.value.isEmpty) {
-      aiHonestyError.value = 'Please select how honest you want the AI to be';
+      aiHonestyError.value = AppTexts.profileSetupErrorAiHonesty;
       isValid = false;
     }
 
@@ -446,7 +471,7 @@ class ProfileSetupController extends BaseController {
         'interestedIn': selectedInterestedIn.value,
         'dailyRoutine': selectedDailyRoutine.value,
         'aiCommunication': selectedAiCommunication.value,
-        'biggestChallenge': selectedBiggestChallenge.toList(),
+        'biggestChallenge': selectedBiggestChallenge.value,
         'timeDedication': selectedTimeDedication.value,
         'aiToolsFamiliarity': selectedAiToolsFamiliarity.value,
         'stressResponse': selectedStressResponse.value,
@@ -525,7 +550,7 @@ class ProfileSetupController extends BaseController {
         'interestedIn': selectedInterestedIn.value,
         'dailyRoutine': selectedDailyRoutine.value,
         'aiCommunication': selectedAiCommunication.value,
-        'biggestChallenge': selectedBiggestChallenge.toList(),
+        'biggestChallenge': selectedBiggestChallenge.value,
         'timeDedication': selectedTimeDedication.value,
         'aiToolsFamiliarity': selectedAiToolsFamiliarity.value,
         'stressResponse': selectedStressResponse.value,

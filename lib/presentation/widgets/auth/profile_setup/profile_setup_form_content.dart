@@ -4,9 +4,7 @@ import 'package:get/get.dart';
 import 'package:amorra/presentation/widgets/common/app_large_button.dart';
 import 'package:amorra/presentation/widgets/common/app_text_field_error_message.dart';
 import 'package:amorra/presentation/widgets/auth/profile_setup/profile_setup_form_section.dart';
-import 'package:amorra/presentation/widgets/auth/profile_setup/profile_setup_dropdown_field.dart';
-import 'package:amorra/presentation/widgets/auth/profile_setup/profile_setup_topics_section.dart';
-import 'package:amorra/core/utils/app_colors/app_colors.dart';
+import 'package:amorra/presentation/widgets/auth/profile_setup/profile_setup_pill_button_group.dart';
 import 'package:amorra/core/utils/app_spacing/app_spacing.dart';
 import 'package:amorra/core/utils/app_texts/app_texts.dart';
 
@@ -25,11 +23,7 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: AppSpacing.symmetric(
-        context,
-        h: 0.04,
-        v: 0.02,
-      ),
+      padding: AppSpacing.symmetric(context, h: 0.04, v: 0.02).copyWith(top: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -40,20 +34,18 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.conversationToneLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedTone.value.isEmpty
-                        ? null
-                        : controller.selectedTone.value,
-                    items: controller.toneOptions,
-                    onChanged: controller.updateTone,
-                    hint: AppTexts.conversationToneHint,
+                  hint: AppTexts.conversationToneHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.toneOptions,
+                    selectedOptions: controller.selectedTone.value.isEmpty
+                        ? []
+                        : [controller.selectedTone.value],
+                    onSelect: controller.updateTone,
                     errorText: controller.toneError.value,
                   ),
                 ),
                 // Error message
-                AppTextFieldErrorMessage(
-                  errorText: controller.toneError.value,
-                ),
+                AppTextFieldErrorMessage(errorText: controller.toneError.value),
               ],
             ),
           ),
@@ -66,13 +58,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.sexualOrientationLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedSexualOrientation.value.isEmpty
-                        ? null
-                        : controller.selectedSexualOrientation.value,
-                    items: controller.sexualOrientationOptions,
-                    onChanged: controller.updateSexualOrientation,
-                    hint: AppTexts.sexualOrientationHint,
+                  hint: AppTexts.sexualOrientationHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.sexualOrientationOptions,
+                    selectedOptions:
+                        controller.selectedSexualOrientation.value.isEmpty
+                        ? []
+                        : [controller.selectedSexualOrientation.value],
+                    onSelect: controller.updateSexualOrientation,
                     errorText: controller.sexualOrientationError.value,
                   ),
                 ),
@@ -86,17 +79,19 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
           AppSpacing.vertical(context, 0.02),
 
           // Topics to Avoid
-          Obx(
-            () => Column(
+          Obx(() {
+            final _ = controller.selectedTopicsToAvoid.length;
+            final selectedTopics = controller.selectedTopicsToAvoid.toList();
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.topicsToAvoidLabel,
                   hint: AppTexts.topicsToAvoidHint,
-                  field: ProfileSetupTopicsSection(
+                  field: ProfileSetupPillButtonGroup(
                     options: controller.topicsToAvoidOptions,
-                    selectedOptions: controller.selectedTopicsToAvoid,
-                    onToggle: controller.toggleTopicToAvoid,
+                    selectedOptions: selectedTopics,
+                    onSelect: controller.updateTopicToAvoid,
                     errorText: controller.topicsToAvoidError.value,
                   ),
                 ),
@@ -105,8 +100,8 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
                   errorText: controller.topicsToAvoidError.value,
                 ),
               ],
-            ),
-          ),
+            );
+          }),
           AppSpacing.vertical(context, 0.02),
 
           // Biggest Challenge
@@ -117,10 +112,13 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
                 ProfileSetupFormSection(
                   label: AppTexts.biggestChallengeLabel,
                   hint: AppTexts.biggestChallengeHint,
-                  field: ProfileSetupTopicsSection(
+                  field: ProfileSetupPillButtonGroup(
                     options: controller.biggestChallengeOptions,
-                    selectedOptions: controller.selectedBiggestChallenge,
-                    onToggle: controller.toggleBiggestChallenge,
+                    selectedOptions:
+                        controller.selectedBiggestChallenge.value.isEmpty
+                        ? []
+                        : [controller.selectedBiggestChallenge.value],
+                    onSelect: controller.updateBiggestChallenge,
                     errorText: controller.biggestChallengeError.value,
                   ),
                 ),
@@ -140,13 +138,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.supportTypeLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedSupportType.value.isEmpty
-                        ? null
-                        : controller.selectedSupportType.value,
-                    items: controller.supportTypeOptions,
-                    onChanged: controller.updateSupportType,
-                    hint: AppTexts.supportTypeHint,
+                  hint: AppTexts.supportTypeHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.supportTypeOptions,
+                    selectedOptions:
+                        controller.selectedSupportType.value.isEmpty
+                        ? []
+                        : [controller.selectedSupportType.value],
+                    onSelect: controller.updateSupportType,
                     errorText: controller.supportTypeError.value,
                   ),
                 ),
@@ -166,13 +165,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.relationshipStatusLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedRelationshipStatus.value.isEmpty
-                        ? null
-                        : controller.selectedRelationshipStatus.value,
-                    items: controller.relationshipStatusOptions,
-                    onChanged: controller.updateRelationshipStatus,
-                    hint: AppTexts.relationshipStatusHint,
+                  hint: AppTexts.relationshipStatusHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.relationshipStatusOptions,
+                    selectedOptions:
+                        controller.selectedRelationshipStatus.value.isEmpty
+                        ? []
+                        : [controller.selectedRelationshipStatus.value],
+                    onSelect: controller.updateRelationshipStatus,
                     errorText: controller.relationshipStatusError.value,
                   ),
                 ),
@@ -192,13 +192,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.dailyRoutineLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedDailyRoutine.value.isEmpty
-                        ? null
-                        : controller.selectedDailyRoutine.value,
-                    items: controller.dailyRoutineOptions,
-                    onChanged: controller.updateDailyRoutine,
-                    hint: AppTexts.dailyRoutineHint,
+                  hint: AppTexts.dailyRoutineHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.dailyRoutineOptions,
+                    selectedOptions:
+                        controller.selectedDailyRoutine.value.isEmpty
+                        ? []
+                        : [controller.selectedDailyRoutine.value],
+                    onSelect: controller.updateDailyRoutine,
                     errorText: controller.dailyRoutineError.value,
                   ),
                 ),
@@ -218,13 +219,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.interestedInLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedInterestedIn.value.isEmpty
-                        ? null
-                        : controller.selectedInterestedIn.value,
-                    items: controller.interestedInOptions,
-                    onChanged: controller.updateInterestedIn,
-                    hint: AppTexts.interestedInHint,
+                  hint: AppTexts.interestedInHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.interestedInOptions,
+                    selectedOptions:
+                        controller.selectedInterestedIn.value.isEmpty
+                        ? []
+                        : [controller.selectedInterestedIn.value],
+                    onSelect: controller.updateInterestedIn,
                     errorText: controller.interestedInError.value,
                   ),
                 ),
@@ -244,13 +246,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.aiCommunicationLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedAiCommunication.value.isEmpty
-                        ? null
-                        : controller.selectedAiCommunication.value,
-                    items: controller.aiCommunicationOptions,
-                    onChanged: controller.updateAiCommunication,
-                    hint: AppTexts.aiCommunicationHint,
+                  hint: AppTexts.aiCommunicationHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.aiCommunicationOptions,
+                    selectedOptions:
+                        controller.selectedAiCommunication.value.isEmpty
+                        ? []
+                        : [controller.selectedAiCommunication.value],
+                    onSelect: controller.updateAiCommunication,
                     errorText: controller.aiCommunicationError.value,
                   ),
                 ),
@@ -270,13 +273,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.aiToolsFamiliarityLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedAiToolsFamiliarity.value.isEmpty
-                        ? null
-                        : controller.selectedAiToolsFamiliarity.value,
-                    items: controller.aiToolsFamiliarityOptions,
-                    onChanged: controller.updateAiToolsFamiliarity,
-                    hint: AppTexts.aiToolsFamiliarityHint,
+                  hint: AppTexts.aiToolsFamiliarityHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.aiToolsFamiliarityOptions,
+                    selectedOptions:
+                        controller.selectedAiToolsFamiliarity.value.isEmpty
+                        ? []
+                        : [controller.selectedAiToolsFamiliarity.value],
+                    onSelect: controller.updateAiToolsFamiliarity,
                     errorText: controller.aiToolsFamiliarityError.value,
                   ),
                 ),
@@ -296,13 +300,13 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.aiHonestyLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedAiHonesty.value.isEmpty
-                        ? null
-                        : controller.selectedAiHonesty.value,
-                    items: controller.aiHonestyOptions,
-                    onChanged: controller.updateAiHonesty,
-                    hint: AppTexts.aiHonestyHint,
+                  hint: AppTexts.aiHonestyHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.aiHonestyOptions,
+                    selectedOptions: controller.selectedAiHonesty.value.isEmpty
+                        ? []
+                        : [controller.selectedAiHonesty.value],
+                    onSelect: controller.updateAiHonesty,
                     errorText: controller.aiHonestyError.value,
                   ),
                 ),
@@ -322,13 +326,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.stressResponseLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedStressResponse.value.isEmpty
-                        ? null
-                        : controller.selectedStressResponse.value,
-                    items: controller.stressResponseOptions,
-                    onChanged: controller.updateStressResponse,
-                    hint: AppTexts.stressResponseHint,
+                  hint: AppTexts.stressResponseHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.stressResponseOptions,
+                    selectedOptions:
+                        controller.selectedStressResponse.value.isEmpty
+                        ? []
+                        : [controller.selectedStressResponse.value],
+                    onSelect: controller.updateStressResponse,
                     errorText: controller.stressResponseError.value,
                   ),
                 ),
@@ -348,13 +353,14 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
               children: [
                 ProfileSetupFormSection(
                   label: AppTexts.timeDedicationLabel,
-                  field: ProfileSetupDropdownField(
-                    value: controller.selectedTimeDedication.value.isEmpty
-                        ? null
-                        : controller.selectedTimeDedication.value,
-                    items: controller.timeDedicationOptions,
-                    onChanged: controller.updateTimeDedication,
-                    hint: AppTexts.timeDedicationHint,
+                  hint: AppTexts.timeDedicationHint,
+                  field: ProfileSetupPillButtonGroup(
+                    options: controller.timeDedicationOptions,
+                    selectedOptions:
+                        controller.selectedTimeDedication.value.isEmpty
+                        ? []
+                        : [controller.selectedTimeDedication.value],
+                    onSelect: controller.updateTimeDedication,
                     errorText: controller.timeDedicationError.value,
                   ),
                 ),
@@ -370,10 +376,21 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
           // Save Button
           if (showSaveButton)
             Obx(
-              () => AppLargeButton(
-                text: AppTexts.profileSetupSaveButton,
-                onPressed: onSave ?? controller.updatePreferences,
-                isLoading: controller.isLoading.value,
+              () => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Error message if there are validation errors
+                  if (controller.hasErrors)
+                    AppTextFieldErrorMessage(
+                      errorText: AppTexts.profileSetupFixErrorsMessage,
+                    ),
+                  if (controller.hasErrors) AppSpacing.vertical(context, 0.01),
+                  AppLargeButton(
+                    text: AppTexts.profileSetupSaveButton,
+                    onPressed: onSave ?? controller.updatePreferences,
+                    isLoading: controller.isLoading.value,
+                  ),
+                ],
               ),
             ),
           AppSpacing.vertical(context, 0.02),
@@ -382,4 +399,3 @@ class ProfileSetupFormContent extends GetView<ProfileSetupController> {
     );
   }
 }
-

@@ -6,7 +6,7 @@ import 'package:amorra/core/utils/app_styles/app_text_styles.dart';
 
 /// App Screen Header Widget
 /// Reusable header widget for screens with consistent styling
-/// 
+///
 /// - For home screen: Pass null or empty title to show logo
 /// - For other screens: Pass the screen title to display
 /// - Has default values for all optional parameters
@@ -39,7 +39,9 @@ class AppScreenHeader extends StatelessWidget {
               child: title == null || title!.isEmpty
                   ? Image.asset(
                       AppImages.splashLogo,
-                      width: logoWidth ?? AppResponsive.iconSize(context, factor: 3),
+                      width:
+                          logoWidth ??
+                          AppResponsive.iconSize(context, factor: 3),
                       height: logoHeight,
                       fit: BoxFit.contain,
                     )
@@ -49,15 +51,14 @@ class AppScreenHeader extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         fontSize: AppResponsive.scaleSize(context, 20),
                         color: AppColors.black,
+                        height: 1.3,
                       ),
                     ),
             ),
           ),
-          if (actions != null && actions!.isNotEmpty)
-            ...actions!,
+          if (actions != null && actions!.isNotEmpty) ...actions!,
         ],
       ),
     );
   }
 }
-

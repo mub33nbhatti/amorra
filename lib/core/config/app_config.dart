@@ -1,3 +1,5 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// App Configuration
 /// Contains app-wide configuration constants and settings
 class AppConfig {
@@ -7,16 +9,31 @@ class AppConfig {
   static const String appDescription =
       'AI Companion for Men 50+ - Emotional & Romantic Support Chat Partner';
 
-  // Environment
-  static const bool isDevelopment = true; // Change to false for production
+  // Environment - Load from environment variables
+  static bool get isDevelopment {
+    final env = dotenv.env['APP_ENV'] ?? 'development';
+    return env.toLowerCase() == 'development';
+  }
 
-  // Free Tier Limits
-  static const int freeMessageLimit = 10; // Free messages per day
-  static const int freeDailyLimit = 10;
+  // Free Trial Configuration
+  static const int freeTrialDays = 7; // 7 days of unlimited messages
 
-  // Subscription
-  static const String subscriptionProductId = 'amorra_monthly_subscription';
-  static const double monthlySubscriptionPrice = 9.99;
+  // Free Tier Limits - Load from environment variables with fallback
+  // Applied after free trial period ends
+  static int get freeMessageLimit {
+    return int.tryParse(dotenv.env['FREE_MESSAGE_LIMIT'] ?? '10') ?? 10;
+  }
+
+  static int get freeDailyLimit => freeMessageLimit;
+
+  // Subscription - Load from environment variables with fallback
+  static String get subscriptionProductId {
+    return dotenv.env['SUBSCRIPTION_PRODUCT_ID'] ?? 'amorra_monthly_subscription';
+  }
+
+  static double get monthlySubscriptionPrice {
+    return double.tryParse(dotenv.env['SUBSCRIPTION_PRICE'] ?? '9.99') ?? 9.99;
+  }
 
   // AI Configuration
   static const int maxContextMessages = 20; // Number of messages to retain in context

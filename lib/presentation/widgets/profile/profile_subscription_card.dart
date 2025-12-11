@@ -71,32 +71,44 @@ class ProfileSubscriptionCard extends StatelessWidget {
 
           // Free User Content
           if (!isSubscribed) ...[
-            // Messages left text
-            Text(
-              AppTexts.subscriptionMessagesLeft.replaceAll(
-                '{count}',
-                remainingMessages.toString(),
+            // Check if in free trial (999 = unlimited indicator)
+            if (remainingMessages >= 999 || dailyLimit >= 999) ...[
+              // Free trial active - show unlimited message
+              Text(
+                AppTexts.subscriptionFreeTrialActive,
+                style: AppTextStyles.bodyText(context).copyWith(
+                  color: AppColors.black,
+                  fontSize: AppResponsive.scaleSize(context, 12),
+                ),
               ),
-              style: AppTextStyles.bodyText(context).copyWith(
-                color: AppColors.black,
-                fontSize: AppResponsive.scaleSize(context, 12),
+            ] else ...[
+              // Free trial ended - show messages left
+              Text(
+                AppTexts.subscriptionMessagesLeft.replaceAll(
+                  '{count}',
+                  remainingMessages.toString(),
+                ),
+                style: AppTextStyles.bodyText(context).copyWith(
+                  color: AppColors.black,
+                  fontSize: AppResponsive.scaleSize(context, 12),
+                ),
               ),
-            ),
 
-            AppSpacing.vertical(context, 0.01),
+              AppSpacing.vertical(context, 0.01),
 
-            // Progress indicator
-            ClipRRect(
-              borderRadius: BorderRadius.circular(
-                AppResponsive.radius(context, factor: 0.5),
+              // Progress indicator
+              ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  AppResponsive.radius(context, factor: 0.5),
+                ),
+                child: LinearProgressIndicator(
+                  value: _progressValue,
+                  backgroundColor: AppColors.secondary,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  minHeight: AppResponsive.screenHeight(context) * 0.01,
+                ),
               ),
-              child: LinearProgressIndicator(
-                value: _progressValue,
-                backgroundColor: AppColors.secondary,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                minHeight: AppResponsive.screenHeight(context) * 0.01,
-              ),
-            ),
+            ],
 
             AppSpacing.vertical(context, 0.015),
 

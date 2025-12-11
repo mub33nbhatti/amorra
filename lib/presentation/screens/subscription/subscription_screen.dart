@@ -7,6 +7,7 @@ import 'package:amorra/presentation/widgets/common/app_screen_header.dart';
 import 'package:amorra/presentation/widgets/subscription/subscription_plan_card.dart';
 import 'package:amorra/presentation/widgets/subscription/subscription_header_section.dart';
 import 'package:amorra/presentation/controllers/subscription/subscription_controller.dart';
+import 'package:amorra/presentation/widgets/common/app_loading_indicator.dart';
 
 /// Subscription Screen
 /// Eye-catching subscription screen with plan selection
@@ -20,7 +21,7 @@ class SubscriptionScreen extends GetView<SubscriptionController> {
       body: Obx(() {
         if (controller.isLoading.value &&
             controller.subscription.value == null) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppLoadingIndicator());
         }
 
         return Column(

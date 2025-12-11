@@ -9,6 +9,7 @@ import 'package:amorra/core/utils/app_styles/app_text_styles.dart';
 import 'package:amorra/core/utils/app_texts/app_texts.dart';
 import 'package:amorra/presentation/widgets/common/app_screen_header.dart';
 import 'package:amorra/presentation/widgets/common/app_lottie_message.dart';
+import 'package:amorra/presentation/widgets/common/app_loading_indicator.dart';
 import 'package:amorra/presentation/widgets/profile/profile_header_card.dart';
 import 'package:amorra/presentation/widgets/profile/profile_user_info_card.dart';
 import 'package:amorra/presentation/widgets/profile/profile_action_buttons.dart';
@@ -27,7 +28,7 @@ class ProfileScreen extends GetView<ProfileController> {
       backgroundColor: AppColors.white,
       body: Obx(() {
         if (controller.isLoading.value && controller.user.value == null) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppLoadingIndicator());
         }
 
         if (controller.user.value == null) {
@@ -110,7 +111,8 @@ class ProfileScreen extends GetView<ProfileController> {
                         Obx(() => ProfileActionButtons(
                               onLogout: controller.logout,
                               onDeleteAccount: controller.deleteAccount,
-                              isLoading: controller.isLoading.value,
+                              isLogoutLoading: controller.isLogoutLoading.value,
+                              isDeleteAccountLoading: controller.isDeleteAccountLoading.value,
                             )),
                       ],
                     ),

@@ -11,11 +11,7 @@ class AuthHeader extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const AuthHeader({
-    super.key,
-    required this.title,
-    required this.subtitle,
-  });
+  const AuthHeader({super.key, required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +33,7 @@ class AuthHeader extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: AppColors.black,
             fontSize: AppResponsive.scaleSize(context, 24),
+            height: 1.3,
           ),
         ),
 
@@ -46,6 +43,7 @@ class AuthHeader extends StatelessWidget {
           style: AppTextStyles.bodyText(context).copyWith(
             color: AppColors.grey,
             fontSize: AppResponsive.scaleSize(context, 14),
+            height: 1.3,
           ),
         ),
         AppSpacing.vertical(context, 0.02),
@@ -53,4 +51,3 @@ class AuthHeader extends StatelessWidget {
     );
   }
 }
-

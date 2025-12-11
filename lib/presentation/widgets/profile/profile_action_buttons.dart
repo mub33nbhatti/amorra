@@ -9,13 +9,15 @@ import '../../widgets/common/app_large_button.dart';
 class ProfileActionButtons extends StatelessWidget {
   final VoidCallback onLogout;
   final VoidCallback onDeleteAccount;
-  final bool isLoading;
+  final bool isLogoutLoading;
+  final bool isDeleteAccountLoading;
 
   const ProfileActionButtons({
     super.key,
     required this.onLogout,
     required this.onDeleteAccount,
-    required this.isLoading,
+    required this.isLogoutLoading,
+    required this.isDeleteAccountLoading,
   });
 
   @override
@@ -26,7 +28,7 @@ class ProfileActionButtons extends StatelessWidget {
         AppLargeButton(
           text: AppTexts.profileLogoutButton,
           onPressed: onLogout,
-          isLoading: isLoading,
+          isLoading: isLogoutLoading,
         ),
         AppSpacing.vertical(context, 0.01),
 
@@ -34,7 +36,7 @@ class ProfileActionButtons extends StatelessWidget {
         AppLargeButton(
           text: AppTexts.profileDeleteAccountButton,
           onPressed: onDeleteAccount,
-          isLoading: isLoading,
+          isLoading: isDeleteAccountLoading,
           backgroundColor: AppColors.error,
           textColor: AppColors.white,
         ),

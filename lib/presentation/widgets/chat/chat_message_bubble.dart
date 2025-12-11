@@ -60,7 +60,7 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
                 padding: AppSpacing.symmetric(context, h: 0.02, v: 0.01),
                 decoration: BoxDecoration(
-                  color: isUser ? AppColors.primary : AppColors.secondary,
+                  color: isUser ? AppColors.secondary : AppColors.primary,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(
                       AppResponsive.radius(context, factor: 2),

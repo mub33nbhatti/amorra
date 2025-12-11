@@ -912,18 +912,58 @@ class AuthRepository {
         return false;
       }
 
-      // Check if required fields are present
+      // Check if all required fields are present (all fields are now strings, not lists)
       final hasTone = preferences['conversationTone'] != null &&
+          (preferences['conversationTone'] is String) &&
           (preferences['conversationTone'] as String).isNotEmpty;
-      final hasTopicsToAvoid = preferences['topicsToAvoid'] != null &&
-          (preferences['topicsToAvoid'] is List) &&
-          (preferences['topicsToAvoid'] as List).isNotEmpty;
+      // Handle topicsToAvoid - can be string (old format) or list (new format)
+      final topicsToAvoidValue = preferences['topicsToAvoid'];
+      final hasTopicsToAvoid = topicsToAvoidValue != null &&
+          ((topicsToAvoidValue is List && topicsToAvoidValue.isNotEmpty) ||
+           (topicsToAvoidValue is String && topicsToAvoidValue.isNotEmpty));
       final hasRelationshipStatus = preferences['relationshipStatus'] != null &&
+          (preferences['relationshipStatus'] is String) &&
           (preferences['relationshipStatus'] as String).isNotEmpty;
       final hasSupportType = preferences['supportType'] != null &&
+          (preferences['supportType'] is String) &&
           (preferences['supportType'] as String).isNotEmpty;
+      final hasSexualOrientation = preferences['sexualOrientation'] != null &&
+          (preferences['sexualOrientation'] is String) &&
+          (preferences['sexualOrientation'] as String).isNotEmpty;
+      final hasInterestedIn = preferences['interestedIn'] != null &&
+          (preferences['interestedIn'] is String) &&
+          (preferences['interestedIn'] as String).isNotEmpty;
+      final hasAiCommunication = preferences['aiCommunication'] != null &&
+          (preferences['aiCommunication'] is String) &&
+          (preferences['aiCommunication'] as String).isNotEmpty;
+      final hasBiggestChallenge = preferences['biggestChallenge'] != null &&
+          (preferences['biggestChallenge'] is String) &&
+          (preferences['biggestChallenge'] as String).isNotEmpty;
+      final hasTimeDedication = preferences['timeDedication'] != null &&
+          (preferences['timeDedication'] is String) &&
+          (preferences['timeDedication'] as String).isNotEmpty;
+      final hasAiToolsFamiliarity = preferences['aiToolsFamiliarity'] != null &&
+          (preferences['aiToolsFamiliarity'] is String) &&
+          (preferences['aiToolsFamiliarity'] as String).isNotEmpty;
+      final hasStressResponse = preferences['stressResponse'] != null &&
+          (preferences['stressResponse'] is String) &&
+          (preferences['stressResponse'] as String).isNotEmpty;
+      final hasAiHonesty = preferences['aiHonesty'] != null &&
+          (preferences['aiHonesty'] is String) &&
+          (preferences['aiHonesty'] as String).isNotEmpty;
 
-      return hasTone && hasTopicsToAvoid && hasRelationshipStatus && hasSupportType;
+      return hasTone &&
+          hasTopicsToAvoid &&
+          hasRelationshipStatus &&
+          hasSupportType &&
+          hasSexualOrientation &&
+          hasInterestedIn &&
+          hasAiCommunication &&
+          hasBiggestChallenge &&
+          hasTimeDedication &&
+          hasAiToolsFamiliarity &&
+          hasStressResponse &&
+          hasAiHonesty;
     } catch (e) {
       if (kDebugMode) {
         print('❌ Get profile setup status error: $e');

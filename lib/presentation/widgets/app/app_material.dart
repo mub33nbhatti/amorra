@@ -29,7 +29,7 @@ class AppMaterial extends StatelessWidget {
         theme: AppTheme.lightTheme,
 
         // Routing Configuration
-        initialRoute: AppRoutes.signup,
+        initialRoute: AppRoutes.splash,
         getPages: AppRoutes.getRoutes(),
         unknownRoute: GetPage(
           name: '/notfound',

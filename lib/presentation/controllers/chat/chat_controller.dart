@@ -2,9 +2,11 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:amorra/data/models/chat_message_model.dart';
+import 'package:amorra/data/models/user_model.dart';
 import 'package:amorra/domain/services/chat_service.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/core/config/app_config.dart';
+import 'package:amorra/core/utils/free_trial_utils.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
 import 'package:amorra/data/services/chat_api_service.dart';
 import 'package:amorra/presentation/controllers/auth/profile_setup/profile_setup_controller.dart';
@@ -21,19 +23,52 @@ class ChatController extends BaseController {
   // State
   final RxList<ChatMessageModel> messages = <ChatMessageModel>[].obs;
   final RxBool isTyping = false.obs;
-  final RxInt remainingMessages = 10.obs; // Default to 10 for free tier
+  final RxInt remainingMessages = 999.obs; // Default to unlimited (will be updated based on trial/subscription)
+  final RxBool isWithinFreeTrial = false.obs;
   final TextEditingController inputController = TextEditingController();
 
   // Computed
   bool get canSendMessage {
+    // If within free trial or subscribed, always allow
+    if (isWithinFreeTrial.value) return true;
     return remainingMessages.value > 0;
   }
 
+  // Get current user
+  UserModel? get currentUser {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        return Get.find<AuthController>().currentUser.value;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // User ID (should come from auth)
-  String? get userId => Get.find<AuthController>().currentUser.value?.id;
+  String? get userId {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        return Get.find<AuthController>().currentUser.value?.id;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   // User Age (should come from auth)
-  int? get userAge => Get.find<AuthController>().currentUser.value?.age;
+  int? get userAge {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        return Get.find<AuthController>().currentUser.value?.age;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   @override
   void onInit() {
@@ -41,13 +76,48 @@ class ChatController extends BaseController {
     if (userId != null) {
       loadMessages();
       listenToMessages();
+      _checkFreeTrialStatus();
       checkDailyLimit();
     }
+
+    // Listen to user changes to update free trial status
+    _setupUserListener();
 
     // Listen to input changes
     inputController.addListener(() {
       // Update canSendMessage based on input and limit
     });
+  }
+
+  /// Setup listener for user changes to update free trial status
+  void _setupUserListener() {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
+        ever(authController.currentUser, (UserModel? user) {
+          _checkFreeTrialStatus();
+          if (userId != null) {
+            checkDailyLimit();
+          }
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error setting up user listener: $e');
+      }
+    }
+  }
+
+  /// Check if user is within free trial period
+  void _checkFreeTrialStatus() {
+    final user = currentUser;
+    if (user != null) {
+      isWithinFreeTrial.value = FreeTrialUtils.isWithinFreeTrial(user);
+      // If within free trial, set unlimited messages
+      if (isWithinFreeTrial.value) {
+        remainingMessages.value = 999; // Unlimited indicator
+      }
+    }
   }
 
   @override
@@ -97,8 +167,11 @@ class ChatController extends BaseController {
       return;
     }
 
-    // Check daily limit
-    if (remainingMessages.value <= 0) {
+    // Check if user can send message
+    final user = currentUser;
+    final hasUnlimited = user != null && FreeTrialUtils.hasUnlimitedMessages(user);
+    
+    if (!hasUnlimited && remainingMessages.value <= 0) {
       showError(
         'Daily Limit Reached',
         subtitle: 'You\'ve reached your daily message limit. Upgrade to Premium for unlimited messages.',
@@ -117,8 +190,12 @@ class ChatController extends BaseController {
       // This will call ChatApiService.sendMessageToAI() when API is integrated
       await _sendMessageWithAPI(message);
 
-      // Update remaining messages
-      remainingMessages.value = (remainingMessages.value - 1).clamp(0, 999);
+      // Update remaining messages (only if not in free trial and not subscribed)
+      final user = currentUser;
+      final hasUnlimited = user != null && FreeTrialUtils.hasUnlimitedMessages(user);
+      if (!hasUnlimited) {
+        remainingMessages.value = (remainingMessages.value - 1).clamp(0, 999);
+      }
 
       // Typing indicator will be handled by stream update or API response
     } catch (e) {
@@ -152,6 +229,15 @@ class ChatController extends BaseController {
   Future<void> checkDailyLimit() async {
     if (userId == null) return;
 
+    final user = currentUser;
+    final hasUnlimited = user != null && FreeTrialUtils.hasUnlimitedMessages(user);
+    
+    // If user has unlimited (trial or subscribed), don't check limit
+    if (hasUnlimited) {
+      remainingMessages.value = 999; // Unlimited indicator
+      return;
+    }
+
     try {
       // TODO: Replace with actual API call
       // This will call ChatApiService.checkDailyLimit() when API is integrated
@@ -162,8 +248,8 @@ class ChatController extends BaseController {
       if (kDebugMode) {
         print('Error checking daily limit: $e');
       }
-      // Default to 10 for free tier if check fails
-      remainingMessages.value = 10;
+      // Default to free tier limit if check fails
+      remainingMessages.value = AppConfig.freeMessageLimit;
     }
   }
 

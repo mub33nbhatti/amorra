@@ -8,6 +8,7 @@ import 'package:amorra/presentation/controllers/home/home_controller.dart';
 import 'package:amorra/presentation/widgets/home/home_top_section.dart';
 import 'package:amorra/presentation/widgets/home/home_chat_cta_card.dart';
 import 'package:amorra/presentation/widgets/home/home_suggestions_section.dart';
+import 'package:amorra/presentation/widgets/common/app_loading_indicator.dart';
 
 /// Home Screen
 /// Main home screen with greeting, chat CTA, suggestions, and safety info
@@ -20,7 +21,7 @@ class HomeScreen extends GetView<HomeController> {
       backgroundColor: AppColors.white,
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: AppLoadingIndicator());
         }
 
         return Column(
@@ -39,10 +40,13 @@ class HomeScreen extends GetView<HomeController> {
                   AppSpacing.vertical(context, 0.01),
 
                   // TopSection
-                  HomeTopSection(
-                    userName: controller.userName.value,
-                    greeting: controller.greeting.value,
-                    introText: AppTexts.homeIntroText,
+                  Obx(
+                    () => HomeTopSection(
+                      userName: controller.userName.value,
+                      greeting: controller.greeting.value,
+                      introText: AppTexts.homeIntroText,
+                      isLoading: controller.isUserNameLoading.value,
+                    ),
                   ),
                 ],
               ),
@@ -72,10 +76,13 @@ class HomeScreen extends GetView<HomeController> {
                     AppSpacing.vertical(context, 0.02),
 
                     // SuggestionsSection
-                    HomeSuggestionsSection(
-                      suggestions: controller.dailySuggestions.toList(),
-                      onSuggestionTap: (starterMessage) => controller
-                          .navigateToChat(starterMessage: starterMessage),
+                    Obx(
+                      () => HomeSuggestionsSection(
+                        suggestions: controller.dailySuggestions.toList(),
+                        onSuggestionTap: (starterMessage) => controller
+                            .navigateToChat(starterMessage: starterMessage),
+                        isLoading: controller.isSuggestionsLoading.value,
+                      ),
                     ),
                   ],
                 ),

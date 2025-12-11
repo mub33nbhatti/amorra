@@ -32,6 +32,7 @@ class AppTexts {
   static const String signinWelcomeMessage =
       "Hi! Welcome back, you've been missed.";
   static const String forgotPassword = "Forgot Password?";
+  static const String rememberMe = "Remember Me";
   static const String loginButton = "Login";
   static const String orContinueWith = "Or continue with";
   static const String continueWithGoogle = "Continue with Google";
@@ -115,10 +116,10 @@ class AppTexts {
   static const String homeGreetingMorning = "Good Morning";
   static const String homeGreetingAfternoon = "Good Afternoon";
   static const String homeGreetingEvening = "Good Evening";
-  static const String homeIntroText = "Ella is here to listen and support you";
+  static const String homeIntroText = "Amorra is here to listen and support you";
   static const String chatCtaStartTitle = "Start your first conversation";
   static const String chatCtaStartSubtitle =
-      "Begin your journey with Ella and discover meaningful connections.";
+      "Begin your journey with Amorra and discover meaningful connections.";
   static const String chatCtaContinueTitle = "Continue your conversation";
   static const String chatCtaButtonStart = "Start Chat";
   static const String chatCtaButtonContinue = "Open Chat";
@@ -128,21 +129,21 @@ class AppTexts {
   static const String safetyBullet1 =
       "Your conversations are private, secure, and fully encrypted.";
   static const String safetyBullet2 =
-      "Ella offers warm, romantic companionship, always respectful and strictly non-explicit.";
+      "Amorra offers warm, romantic companionship, always respectful and strictly non-explicit.";
   static const String safetyBullet3 =
       "Please contact local emergency services in urgent situations.";
 
   // Daily Suggestions
   static const String suggestion1Title = "Share Your Day";
   static const String suggestion1Description =
-      "Tell Ella about your day and how you're feeling.";
+      "Tell Amorra about your day and how you're feeling.";
   static const String suggestion1StarterMessage =
-      "Hi Ella, I wanted to share how my day went...";
+      "Hi Amorra, I wanted to share how my day went...";
 
   static const String suggestion2Title = "Express Your Feelings";
   static const String suggestion2Description =
       "Open up about what's on your mind and heart.";
-  static const String suggestion2StarterMessage = "Ella, I've been feeling...";
+  static const String suggestion2StarterMessage = "Amorra, I've been feeling...";
 
   static const String suggestion3Title = "Seek Comfort";
   static const String suggestion3Description =
@@ -152,7 +153,7 @@ class AppTexts {
 
   static const String suggestion4Title = "Plan Together";
   static const String suggestion4Description =
-      "Discuss your goals and dreams with Ella.";
+      "Discuss your goals and dreams with Amorra.";
   static const String suggestion4StarterMessage =
       "I'd like to talk about my plans for...";
 
@@ -164,6 +165,7 @@ class AppTexts {
   // Subscription Usage Card
   static const String subscriptionFreePlanLabel = "Free plan";
   static const String subscriptionPremiumPlanLabel = "Premium plan active";
+  static const String subscriptionFreeTrialActive = "Free trial active - Unlimited messages";
   static const String subscriptionMessagesLeft =
       "You have {count} messages left today";
   static const String subscriptionUnlimitedText =
@@ -182,7 +184,7 @@ class AppTexts {
   static const String freePlanPrice = "Free";
   static const String premiumPlanPrice = "\$9.99";
   static const String premiumPlanPeriod = "/month";
-  static const String freePlanDescription = "Perfect for trying out Ella";
+  static const String freePlanDescription = "Perfect for trying out Amorra";
   static const String premiumPlanDescription =
       "Unlimited access to all features";
   static const String freePlanFeature1 = "10 messages per day";
@@ -202,10 +204,10 @@ class AppTexts {
   // Profile Setup Screen
   static const String profileSetupTitle = "Set Up Your Profile";
   static const String profileSetupSubtitle =
-      "Help Ella understand your preferences for better conversations";
+      "Help Amorra understand your preferences for better conversations";
   static const String profileSetupUpdateTitle = "Update Your Preferences";
   static const String profileSetupUpdateSubtitle =
-      "Modify your preferences to personalize your conversations with Ella";
+      "Modify your preferences to personalize your conversations with Amorra";
   static const String conversationToneLabel = "Conversation Tone";
   static const String conversationToneHint = "Select your preferred tone";
   static const String conversationToneGentle = "Gentle";
@@ -244,6 +246,22 @@ class AppTexts {
   static const String checkInFrequencyAsNeeded = "As needed";
   static const String profileSetupSaveButton = "Save & Continue";
   static const String profileSetupOptional = "(Optional)";
+
+  // Profile Setup Validation Errors
+  static const String profileSetupErrorTone = "Please select your preferred conversation tone";
+  static const String profileSetupErrorTopicsToAvoid = "Please select a topic to avoid";
+  static const String profileSetupErrorRelationshipStatus = "Please select your relationship status";
+  static const String profileSetupErrorSupportType = "Please select the type of support you are looking for";
+  static const String profileSetupErrorSexualOrientation = "Please select your sexual orientation";
+  static const String profileSetupErrorInterestedIn = "Please select who you are interested in";
+  static const String profileSetupErrorDailyRoutine = "Please select your daily routine";
+  static const String profileSetupErrorAiCommunication = "Please select your preferred communication style";
+  static const String profileSetupErrorBiggestChallenge = "Please select your biggest challenge";
+  static const String profileSetupErrorTimeDedication = "Please select how much time you can dedicate";
+  static const String profileSetupErrorAiToolsFamiliarity = "Please select your familiarity with AI tools";
+  static const String profileSetupErrorStressResponse = "Please select how you respond to stress";
+  static const String profileSetupErrorAiHonesty = "Please select how honest you want the AI to be";
+  static const String profileSetupFixErrorsMessage = "Fix above errors to continue";
 
   // New Profile Setup Questions
   // Sexual Orientation
@@ -332,21 +350,22 @@ class AppTexts {
   static const String aiHonestyDepends = "Depends on the topic";
 
   // Chat Screen
-  static const String chatAIPersonaName = "Ella";
+  static const String chatAIPersonaName = "Amorra";
   static const String chatAIStatus = "Always here for you!";
   static const String chatAIStatusWithName = "Always here for you,";
   static const String chatInputHint = "Type your message...";
   static const String chatSendButton = "Send";
   static const String chatEmptyStateTitle = "Start a conversation";
   static const String chatEmptyStateSubtitle =
-      "Send a message to begin chatting with Ella";
+      "Send a message to begin chatting with Amorra";
   static const String chatDailyLimitReached = "Daily message limit reached";
   static const String chatUpgradePrompt =
       "Upgrade to Premium for unlimited messages";
   static const String chatMessagesRemaining =
       "{count} messages remaining today";
   static const String chatUnlimitedMessages = "Unlimited messages";
-  static const String chatTypingIndicator = "Ella is typing...";
+  static const String chatFreeTrialActive = "You're on a free trial - Unlimited messages!";
+  static const String chatTypingIndicator = "Amorra is typing...";
   static const String chatErrorSending = "Failed to send message";
   static const String chatErrorLoading = "Failed to load messages";
 }

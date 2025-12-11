@@ -14,10 +14,15 @@ import 'package:amorra/data/repositories/chat_repository.dart';
 class MainBinding extends Bindings {
   @override
   void dependencies() {
-    // Ensure AuthController is available (might already exist from AuthBinding)
-    if (!Get.isRegistered<AuthController>()) {
-      Get.lazyPut(() => AuthController());
+    // Ensure AuthController is created and registered FIRST
+    if (Get.isRegistered<AuthController>()) {
+      try {
+        Get.delete<AuthController>();
+      } catch (e) {
+      }
     }
+    // Mark as permanent: true to prevent it from being deleted during navigation
+    Get.put(AuthController(), permanent: true);
 
     // Register ChatRepository and ChatService if not already registered
     if (!Get.isRegistered<ChatRepository>()) {
@@ -42,3 +47,4 @@ class MainBinding extends Bindings {
     Get.lazyPut(() => ProfileSetupController());
   }
 }
+

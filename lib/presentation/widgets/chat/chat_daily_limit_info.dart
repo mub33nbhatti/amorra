@@ -14,11 +14,13 @@ import 'package:iconsax/iconsax.dart';
 class ChatDailyLimitInfo extends StatelessWidget {
   final int remainingMessages;
   final bool isLimitReached;
+  final bool isWithinFreeTrial;
 
   const ChatDailyLimitInfo({
     super.key,
     required this.remainingMessages,
     required this.isLimitReached,
+    this.isWithinFreeTrial = false,
   });
 
   @override
@@ -88,10 +90,12 @@ class ChatDailyLimitInfo extends StatelessWidget {
           AppSpacing.horizontal(context, 0.02),
           Expanded(
             child: Text(
-              AppTexts.chatMessagesRemaining.replaceAll(
-                '{count}',
-                remainingMessages.toString(),
-              ),
+              isWithinFreeTrial
+                  ? AppTexts.chatFreeTrialActive
+                  : AppTexts.chatMessagesRemaining.replaceAll(
+                      '{count}',
+                      remainingMessages.toString(),
+                    ),
               style: AppTextStyles.bodyText(context).copyWith(
                 color: AppColors.white,
                 fontSize: AppResponsive.scaleSize(context, 12),

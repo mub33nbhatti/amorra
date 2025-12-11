@@ -20,6 +20,7 @@ class SubscriptionHeaderSection extends StatelessWidget {
             fontSize: AppResponsive.scaleSize(context, 28),
             fontWeight: FontWeight.bold,
             color: AppColors.black,
+            height: 1.3,
           ),
         ),
         Text(
@@ -27,10 +28,10 @@ class SubscriptionHeaderSection extends StatelessWidget {
           style: AppTextStyles.bodyText(context).copyWith(
             fontSize: AppResponsive.scaleSize(context, 14),
             color: AppColors.grey,
+            height: 1.3,
           ),
         ),
       ],
     );
   }
 }
-

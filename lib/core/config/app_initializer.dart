@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_config.dart';
 
 /// App Initializer
@@ -18,6 +19,9 @@ class AppInitializer {
     // Set status bar color globally
     _setStatusBarStyle();
 
+    // Initialize environment variables
+    await _initializeEnvironment();
+
     // Initialize GetStorage
     await _initializeStorage();
 
@@ -26,6 +30,22 @@ class AppInitializer {
 
     // Initialize GetX controllers
     _initializeControllers();
+  }
+
+  /// Initialize environment variables from .env file
+  static Future<void> _initializeEnvironment() async {
+    try {
+      await dotenv.load(fileName: '.env');
+      if (kDebugMode) {
+        debugPrint('Environment variables loaded successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Environment variables initialization error: $e');
+        debugPrint('Continuing without .env file (using defaults)');
+      }
+      // Continue app initialization even if .env fails (for development)
+    }
   }
 
   /// Set status bar style for the whole app

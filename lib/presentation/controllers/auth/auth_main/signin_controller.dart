@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/core/utils/validators.dart';
 import 'package:amorra/core/utils/firebase_error_handler.dart';
 import 'package:amorra/core/config/routes.dart' as routes;
+import 'package:amorra/core/constants/app_constants.dart';
 import 'package:amorra/data/repositories/auth_repository.dart';
 import 'package:amorra/data/services/firebase_service.dart';
 
@@ -14,6 +16,7 @@ class SigninController extends BaseController {
   // Repository - use Get.find to reuse existing instance
   AuthRepository get _authRepository => Get.find<AuthRepository>();
   final FirebaseService _firebaseService = FirebaseService();
+  final _storage = GetStorage();
 
   // Form key - unique instance
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -25,6 +28,9 @@ class SigninController extends BaseController {
   // State
   final RxBool isPasswordVisible = false.obs;
   final RxBool isFormValid = false.obs;
+  final RxBool rememberMe = false.obs;
+  final RxBool isEmailPasswordSigninLoading = false.obs;
+  final RxBool isGoogleSigninLoading = false.obs;
 
   // Track if disposed
   bool _isDisposed = false;
@@ -37,7 +43,62 @@ class SigninController extends BaseController {
     super.onInit();
     _isDisposed = false;
     _isNavigating = false;
+    _loadRememberedCredentials();
     _setupValidation();
+  }
+
+  /// Load remembered credentials if remember me was enabled
+  void _loadRememberedCredentials() {
+    try {
+      final shouldRemember = _storage.read<bool>(AppConstants.storageKeyRememberMe) ?? false;
+      rememberMe.value = shouldRemember;
+      
+      if (shouldRemember) {
+        final rememberedEmail = _storage.read<String>(AppConstants.storageKeyRememberedEmail);
+        final rememberedPassword = _storage.read<String>(AppConstants.storageKeyRememberedPassword);
+        
+        if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
+          emailController.text = rememberedEmail;
+        }
+        if (rememberedPassword != null && rememberedPassword.isNotEmpty) {
+          passwordController.text = rememberedPassword;
+        }
+        
+        // Trigger validation after loading credentials
+        Future.microtask(() => _validateForm());
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading remembered credentials: $e');
+      }
+    }
+  }
+
+  /// Toggle remember me
+  void toggleRememberMe(bool? value) {
+    if (_isDisposed) return;
+    rememberMe.value = value ?? false;
+    // Trigger validation when remember me is toggled
+    _validateForm();
+  }
+
+  /// Save credentials if remember me is enabled
+  Future<void> _saveCredentials() async {
+    try {
+      if (rememberMe.value) {
+        await _storage.write(AppConstants.storageKeyRememberMe, true);
+        await _storage.write(AppConstants.storageKeyRememberedEmail, emailController.text.trim());
+        await _storage.write(AppConstants.storageKeyRememberedPassword, passwordController.text);
+      } else {
+        await _storage.remove(AppConstants.storageKeyRememberMe);
+        await _storage.remove(AppConstants.storageKeyRememberedEmail);
+        await _storage.remove(AppConstants.storageKeyRememberedPassword);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving credentials: $e');
+      }
+    }
   }
 
   /// Setup form validation listeners
@@ -54,7 +115,12 @@ class SigninController extends BaseController {
     final emailValid = Validators.validateEmail(emailController.text.trim()) == null;
     final passwordValid = Validators.validatePassword(passwordController.text) == null;
 
-    isFormValid.value = emailValid && passwordValid;
+    // If remember me is active and credentials are loaded, form is valid
+    final hasRememberedCredentials = rememberMe.value &&
+        emailController.text.trim().isNotEmpty &&
+        passwordController.text.isNotEmpty;
+
+    isFormValid.value = (emailValid && passwordValid) || hasRememberedCredentials;
   }
 
   /// Validate email
@@ -84,7 +150,7 @@ class SigninController extends BaseController {
     }
 
     try {
-      setLoading(true);
+      isEmailPasswordSigninLoading.value = true;
 
       // Unfocus to dismiss keyboard
       FocusManager.instance.primaryFocus?.unfocus();
@@ -93,6 +159,9 @@ class SigninController extends BaseController {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
+
+      // Save credentials if remember me is enabled
+      await _saveCredentials();
 
       if (_isDisposed || _isNavigating) return;
 
@@ -154,7 +223,7 @@ class SigninController extends BaseController {
       _isNavigating = false;
     } finally {
       if (!_isDisposed) {
-        setLoading(false);
+        isEmailPasswordSigninLoading.value = false;
       }
     }
   }
@@ -164,7 +233,7 @@ class SigninController extends BaseController {
     if (_isDisposed || _isNavigating) return;
 
     try {
-      setLoading(true);
+      isGoogleSigninLoading.value = true;
 
       // Unfocus to dismiss keyboard
       FocusManager.instance.primaryFocus?.unfocus();
@@ -227,7 +296,7 @@ class SigninController extends BaseController {
     } on SignupRequiredException catch (e) {
       if (_isDisposed) return;
 
-      setLoading(false);
+      isGoogleSigninLoading.value = false;
       _isNavigating = true;
 
       // Wait for UI to settle
@@ -257,7 +326,7 @@ class SigninController extends BaseController {
       _isNavigating = false;
     } finally {
       if (!_isDisposed) {
-        setLoading(false);
+        isGoogleSigninLoading.value = false;
       }
     }
   }

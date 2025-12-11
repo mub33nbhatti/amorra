@@ -39,19 +39,21 @@ class AuthFooter extends StatelessWidget {
             context,
           ).copyWith(color: AppColors.grey),
           children: [
-            TextSpan(text: AppTexts.dontHaveAccount),
-            WidgetSpan(
-              child: GestureDetector(
-                onTap: () => Get.offAllNamed(AppRoutes.signup),
-                child: Text(
-                  AppTexts.registerLink,
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                TextSpan(text: AppTexts.dontHaveAccount),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
+                  child: GestureDetector(
+                    onTap: () => Get.offAllNamed(AppRoutes.signup),
+                    child: Text(
+                      AppTexts.registerLink,
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
           ],
         ),
       ),
@@ -74,6 +76,8 @@ class AuthFooter extends StatelessWidget {
               children: [
                 TextSpan(text: AppTexts.termsPrefix),
                 WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
                   child: GestureDetector(
                     onTap: () {
                       // TODO: Navigate to terms
@@ -96,6 +100,8 @@ class AuthFooter extends StatelessWidget {
                   ),
                 ),
                 WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
                   child: GestureDetector(
                     onTap: () {
                       // TODO: Navigate to privacy
@@ -126,6 +132,8 @@ class AuthFooter extends StatelessWidget {
               children: [
                 TextSpan(text: AppTexts.alreadyHaveAccount),
                 WidgetSpan(
+                  alignment: PlaceholderAlignment.baseline,
+                  baseline: TextBaseline.alphabetic,
                   child: GestureDetector(
                     onTap: () => Get.offAllNamed(AppRoutes.signin),
                     child: Text(

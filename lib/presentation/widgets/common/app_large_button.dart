@@ -3,6 +3,7 @@ import 'package:amorra/core/utils/app_colors/app_colors.dart';
 import 'package:amorra/core/utils/app_gradient/app_gradient.dart';
 import 'package:amorra/core/utils/app_responsive/app_responsive.dart';
 import 'package:amorra/core/utils/app_styles/app_text_styles.dart';
+import 'package:amorra/presentation/widgets/common/app_loading_indicator.dart';
 
 /// Large Primary Button Widget with Gradient
 class AppLargeButton extends StatelessWidget {
@@ -57,15 +58,8 @@ class AppLargeButton extends StatelessWidget {
             decoration: decoration,
             child: Center(
               child: isLoading
-                  ? SizedBox(
-                      height: AppResponsive.iconSize(context),
-                      width: AppResponsive.iconSize(context),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          finalTextColor,
-                        ),
-                      ),
+                  ? AppLoadingIndicator(
+                      color: finalTextColor,
                     )
                   : Text(
                       text,

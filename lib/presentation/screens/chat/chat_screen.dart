@@ -13,6 +13,7 @@ import 'package:amorra/presentation/widgets/chat/chat_daily_limit_info.dart';
 import 'package:amorra/presentation/widgets/chat/chat_dummy_messages.dart';
 import 'package:amorra/presentation/widgets/chat/chat_date_label.dart';
 import 'package:amorra/presentation/widgets/common/app_snackbar.dart';
+import 'package:amorra/presentation/widgets/common/app_loading_indicator.dart';
 
 /// Chat Screen
 /// Full chat interface with messages, typing indicator, and input field
@@ -35,9 +36,7 @@ class ChatScreen extends GetView<ChatController> {
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value) {
-                  return Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
+                  return const Center(child: AppLoadingIndicator());
                 }
 
                 // Auto-scroll to bottom when new messages arrive
@@ -116,6 +115,7 @@ class ChatScreen extends GetView<ChatController> {
               () => ChatDailyLimitInfo(
                 remainingMessages: controller.remainingMessages.value,
                 isLimitReached: !controller.canSendMessage,
+                isWithinFreeTrial: controller.isWithinFreeTrial.value,
               ),
             ),
 

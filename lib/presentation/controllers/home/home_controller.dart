@@ -7,8 +7,10 @@ import 'package:amorra/data/models/daily_suggestion_model.dart';
 import 'package:amorra/data/repositories/chat_repository.dart';
 import 'package:amorra/data/repositories/suggestions_repository.dart';
 import 'package:amorra/core/utils/app_texts/app_texts.dart';
+import 'package:amorra/core/config/routes.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
+import 'package:amorra/presentation/controllers/main/main_navigation_controller.dart';
 
 /// Home Controller
 /// Handles home screen logic and state
@@ -22,6 +24,10 @@ class HomeController extends BaseController {
   final RxBool hasActiveChat = false.obs;
   final Rx<ChatMessageModel?> lastMessage = Rx<ChatMessageModel?>(null);
   final RxList<DailySuggestionModel> dailySuggestions = <DailySuggestionModel>[].obs;
+  
+  // Loading states for individual sections
+  final RxBool isUserNameLoading = true.obs;
+  final RxBool isSuggestionsLoading = true.obs;
 
   // Stream subscription for suggestions
   StreamSubscription<List<DailySuggestionModel>>? _suggestionsSubscription;
@@ -29,7 +35,10 @@ class HomeController extends BaseController {
   // User ID getter
   String? get userId {
     try {
-      return Get.find<AuthController>().currentUser.value?.id;
+      if (Get.isRegistered<AuthController>()) {
+        return Get.find<AuthController>().currentUser.value?.id;
+      }
+      return null;
     } catch (e) {
       return null;
     }
@@ -38,9 +47,19 @@ class HomeController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    _setupUserListener();
-    _setupSuggestionsListener();
-    _initializeData();
+    // Delay setup slightly to ensure AuthController is fully initialized
+    // This prevents race conditions when navigating after logout/login
+    Future.microtask(() {
+      try {
+        _setupUserListener();
+        _setupSuggestionsListener();
+        _initializeData();
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error in HomeController delayed init: $e');
+        }
+      }
+    });
   }
 
   @override
@@ -65,6 +84,7 @@ class HomeController extends BaseController {
             print('✅ Daily suggestions stream update: ${suggestions.length} items');
           }
           dailySuggestions.value = suggestions;
+          isSuggestionsLoading.value = false;
         },
         onError: (error) {
           if (kDebugMode) {
@@ -73,6 +93,7 @@ class HomeController extends BaseController {
           setError('Failed to load suggestions');
           // Set empty list on error
           dailySuggestions.value = [];
+          isSuggestionsLoading.value = false;
         },
         cancelOnError: false, // Keep listening even on error
       );
@@ -85,39 +106,79 @@ class HomeController extends BaseController {
         print('❌ Error setting up suggestions listener: $e');
       }
       dailySuggestions.value = [];
+      isSuggestionsLoading.value = false;
     }
   }
 
   /// Setup listener for user changes
   void _setupUserListener() {
-    try {
-      final authController = Get.find<AuthController>();
-      
-      // Listen to currentUser changes reactively
-      ever(authController.currentUser, (UserModel? user) {
-        if (user != null) {
-          userName.value = user.name;
-          // Refresh chat data when user is available
-          if (userId != null) {
-            _checkActiveChat();
+    // Use a delayed approach to ensure AuthController is ready
+    Future.microtask(() {
+      try {
+        // Check if AuthController is registered before accessing it
+        if (!Get.isRegistered<AuthController>()) {
+          if (kDebugMode) {
+            print('⚠️ AuthController not registered, setting default userName');
           }
-        } else {
           userName.value = 'there';
+          isUserNameLoading.value = false;
+          return;
         }
-      });
-      
-      // Set initial user if available
-      if (authController.currentUser.value != null) {
-        userName.value = authController.currentUser.value!.name;
-      } else {
+
+        final authController = Get.find<AuthController>();
+        
+        // Listen to currentUser changes reactively
+        ever(authController.currentUser, (UserModel? user) {
+          // Check if controller still exists before accessing
+          if (!Get.isRegistered<AuthController>()) {
+            return;
+          }
+          
+          try {
+            if (user != null) {
+              userName.value = user.name;
+              isUserNameLoading.value = false;
+              // Refresh chat data when user is available
+              if (userId != null) {
+                _checkActiveChat();
+              }
+            } else {
+              userName.value = 'there';
+              isUserNameLoading.value = false;
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error in user listener callback: $e');
+            }
+            userName.value = 'there';
+            isUserNameLoading.value = false;
+          }
+        });
+        
+        // Set initial user if available
+        try {
+          if (authController.currentUser.value != null) {
+            userName.value = authController.currentUser.value!.name;
+            isUserNameLoading.value = false;
+          } else {
+            userName.value = 'there';
+            isUserNameLoading.value = false;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error getting initial user: $e');
+          }
+          userName.value = 'there';
+          isUserNameLoading.value = false;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Error setting up user listener: $e');
+        }
         userName.value = 'there';
+        isUserNameLoading.value = false;
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error setting up user listener: $e');
-      }
-      userName.value = 'there';
-    }
+    });
   }
 
   /// Initialize all data
@@ -132,10 +193,13 @@ class HomeController extends BaseController {
       // No need to load separately as stream will provide initial data
 
       // Check active chat and get last message
-      if (userId != null) {
-        await _checkActiveChat();
-        if (hasActiveChat.value) {
-          await _getLastMessage();
+      if (Get.isRegistered<AuthController>()) {
+        final currentUserId = userId;
+        if (currentUserId != null) {
+          await _checkActiveChat();
+          if (hasActiveChat.value) {
+            await _getLastMessage();
+          }
         }
       }
     } catch (e) {
@@ -162,10 +226,15 @@ class HomeController extends BaseController {
 
   /// Check if user has active chat
   Future<void> _checkActiveChat() async {
-    if (userId == null) return;
-
     try {
-      hasActiveChat.value = await _chatRepository.hasActiveChat(userId!);
+      if (!Get.isRegistered<AuthController>()) {
+        return;
+      }
+      
+      final currentUserId = userId;
+      if (currentUserId == null) return;
+
+      hasActiveChat.value = await _chatRepository.hasActiveChat(currentUserId);
     } catch (e) {
       hasActiveChat.value = false;
       if (kDebugMode) {
@@ -176,10 +245,15 @@ class HomeController extends BaseController {
 
   /// Get last message
   Future<void> _getLastMessage() async {
-    if (userId == null) return;
-
     try {
-      lastMessage.value = await _chatRepository.getLastMessage(userId!);
+      if (!Get.isRegistered<AuthController>()) {
+        return;
+      }
+      
+      final currentUserId = userId;
+      if (currentUserId == null) return;
+
+      lastMessage.value = await _chatRepository.getLastMessage(currentUserId);
     } catch (e) {
       lastMessage.value = null;
       if (kDebugMode) {
@@ -196,23 +270,17 @@ class HomeController extends BaseController {
 
   /// Navigate to chat screen
   void navigateToChat({String? starterMessage}) {
-    if (starterMessage != null) {
-      showInfo(
-        'Navigating to Chat',
-        subtitle: starterMessage.length > 30 
-            ? 'Starting conversation: ${starterMessage.substring(0, 30)}...'
-            : 'Starting conversation: $starterMessage',
-      );
-    } else {
-      showInfo(
-        'Navigating to Chat',
-        subtitle: hasActiveChat.value
-            ? 'Opening your conversation...'
-            : 'Starting your first conversation...',
-      );
+    try {
+      // Get MainNavigationController and change to chat tab (index 1)
+      final mainNavController = Get.find<MainNavigationController>();
+      mainNavController.changeTab(1); // Chat tab index
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error navigating to chat: $e');
+      }
+      // Fallback: try to navigate using route
+      Get.toNamed(AppRoutes.chat, arguments: {'starterMessage': starterMessage});
     }
-    // TODO: Implement actual navigation later
-    // Get.toNamed(AppRoutes.chat, arguments: {'starterMessage': starterMessage});
   }
 
   /// Refresh home screen data

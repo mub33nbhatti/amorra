@@ -10,6 +10,9 @@ class AppConstants {
   static const String storageKeySubscriptionStatus = 'subscription_status';
   static const String storageKeyThemeMode = 'theme_mode';
   static const String storageKeyAuthToken = 'auth_token';
+  static const String storageKeyRememberMe = 'remember_me';
+  static const String storageKeyRememberedEmail = 'remembered_email';
+  static const String storageKeyRememberedPassword = 'remembered_password';
 
   // Firestore Collection Names
   static const String collectionUsers = 'users';

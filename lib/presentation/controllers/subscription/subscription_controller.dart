@@ -1,10 +1,13 @@
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
 import 'package:amorra/data/models/subscription_model.dart';
+import 'package:amorra/data/models/user_model.dart';
 import 'package:amorra/core/config/app_config.dart';
 import 'package:amorra/core/constants/app_constants.dart';
+import 'package:amorra/core/utils/free_trial_utils.dart';
 import 'package:amorra/data/services/firebase_service.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
+import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
 
 /// Subscription Controller
 /// Handles subscription logic and state
@@ -15,12 +18,55 @@ class SubscriptionController extends BaseController {
   final Rx<SubscriptionModel?> subscription = Rx<SubscriptionModel?>(null);
   final RxBool isSubscribed = false.obs;
   final RxInt remainingFreeMessages = AppConfig.freeMessageLimit.obs;
+  final RxBool isWithinFreeTrial = false.obs;
+
+  // Get current user
+  UserModel? get currentUser {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        return Get.find<AuthController>().currentUser.value;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   @override
   void onInit() {
     super.onInit();
+    _checkFreeTrialStatus();
     checkSubscriptionStatus();
     _setupSubscriptionListener();
+    _setupUserListener();
+  }
+
+  /// Setup listener for user changes to update free trial status
+  void _setupUserListener() {
+    try {
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
+        ever(authController.currentUser, (UserModel? user) {
+          _checkFreeTrialStatus();
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error setting up user listener: $e');
+      }
+    }
+  }
+
+  /// Check if user is within free trial period
+  void _checkFreeTrialStatus() {
+    final user = currentUser;
+    if (user != null) {
+      isWithinFreeTrial.value = FreeTrialUtils.isWithinFreeTrial(user);
+      // If within free trial, set unlimited messages
+      if (isWithinFreeTrial.value) {
+        remainingFreeMessages.value = 999; // Unlimited indicator
+      }
+    }
   }
 
   /// Setup listener for subscription changes
@@ -94,13 +140,22 @@ class SubscriptionController extends BaseController {
 
   /// Check if user can send message (free tier limit)
   bool canSendMessage() {
+    // Subscribed users always can send
     if (isSubscribed.value) return true;
+    
+    // Free trial users can send unlimited
+    if (isWithinFreeTrial.value) return true;
+    
+    // After trial, check remaining messages
     return remainingFreeMessages.value > 0;
   }
 
   /// Decrement free message count
   void decrementFreeMessages() {
-    if (!isSubscribed.value && remainingFreeMessages.value > 0) {
+    // Don't decrement if subscribed or in free trial
+    if (isSubscribed.value || isWithinFreeTrial.value) return;
+    
+    if (remainingFreeMessages.value > 0) {
       remainingFreeMessages.value--;
     }
   }

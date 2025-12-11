@@ -10,14 +10,12 @@ class ProfileSetupFormSection extends StatelessWidget {
   final String label;
   final String? hint;
   final Widget field;
-  final bool isOptional;
 
   const ProfileSetupFormSection({
     super.key,
     required this.label,
     this.hint,
     required this.field,
-    this.isOptional = false,
   });
 
   @override
@@ -27,14 +25,13 @@ class ProfileSetupFormSection extends StatelessWidget {
       children: [
         // Label
         Text(
-          isOptional ? '$label (Optional)' : label,
+          label,
           style: AppTextStyles.bodyText(context).copyWith(
             fontWeight: FontWeight.bold,
             color: AppColors.black,
             fontSize: AppResponsive.scaleSize(context, 16),
           ),
         ),
-        AppSpacing.vertical(context, 0.005),
 
         // Hint (if provided)
         if (hint != null) ...[

@@ -54,7 +54,7 @@ class ProfileSetupBottomSheet extends GetView<ProfileSetupController> {
                 context,
                 h: 0.04,
                 v: 0.02,
-              ).copyWith(bottom: 0),
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -69,6 +69,7 @@ class ProfileSetupBottomSheet extends GetView<ProfileSetupController> {
                             fontWeight: FontWeight.bold,
                             color: AppColors.black,
                             fontSize: AppResponsive.scaleSize(context, 24),
+                            height: 1.3
                           ),
                         ),
                         AppSpacing.vertical(context, 0.005),
@@ -77,6 +78,7 @@ class ProfileSetupBottomSheet extends GetView<ProfileSetupController> {
                           style: AppTextStyles.bodyText(context).copyWith(
                             color: AppColors.grey,
                             fontSize: AppResponsive.scaleSize(context, 14),
+                            height: 1.3
                           ),
                         ),
                       ],
@@ -86,9 +88,9 @@ class ProfileSetupBottomSheet extends GetView<ProfileSetupController> {
                   // Close button
                   IconButton(
                     icon: Icon(
-                      Iconsax.close_circle5,
+                      Iconsax.close_circle,
                       color: AppColors.black,
-                      size: AppResponsive.iconSize(context, factor: 1.2),
+                      size: AppResponsive.iconSize(context, factor: 1.5),
                     ),
                     onPressed: () => Get.back(),
                     padding: EdgeInsets.zero,
