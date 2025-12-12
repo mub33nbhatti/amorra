@@ -8,7 +8,6 @@ import 'package:amorra/core/utils/app_texts/app_texts.dart';
 import 'package:amorra/presentation/widgets/chat/chat_date_label.dart';
 import 'package:get/get.dart';
 import 'package:amorra/presentation/controllers/chat/chat_controller.dart';
-import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
 import 'package:iconsax/iconsax.dart';
 
 /// Chat Header Widget
@@ -21,9 +20,7 @@ class ChatHeader extends GetView<ChatController> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.lightGrey, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.lightGrey)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -49,43 +46,17 @@ class ChatHeader extends GetView<ChatController> {
                           fontWeight: FontWeight.bold,
                           color: AppColors.black,
                           fontSize: AppResponsive.scaleSize(context, 18),
-                            height: 1.3
+                          height: 1.3,
                         ),
                       ),
-                      Obx(() {
-                        // Listen to user changes to update status
-                        String userName = '';
-                        try {
-                          if (Get.isRegistered<AuthController>()) {
-                            final authController = Get.find<AuthController>();
-                            userName = authController.currentUser.value?.name ?? '';
-                          }
-                        } catch (e) {
-                          // AuthController not available, use default
-                          userName = '';
-                        }
-
-                        // Get first name
-                        String firstName = '';
-                        if (userName.isNotEmpty) {
-                          final nameParts = userName.trim().split(' ');
-                          firstName = nameParts.isNotEmpty ? nameParts[0] : '';
-                        }
-
-                        // Build status message
-                        final statusMessage = firstName.isNotEmpty
-                            ? '${AppTexts.chatAIStatusWithName} $firstName!'
-                            : AppTexts.chatAIStatus;
-
-                        return Text(
-                          statusMessage,
-                          style: AppTextStyles.hintText(context).copyWith(
-                            color: AppColors.success,
-                            fontSize: AppResponsive.scaleSize(context, 12),
-                              height: 1.3
-                          ),
-                        );
-                      }),
+                      Text(
+                        AppTexts.chatAIStatus,
+                        style: AppTextStyles.hintText(context).copyWith(
+                          color: AppColors.success,
+                          fontSize: AppResponsive.scaleSize(context, 12),
+                          height: 1.3,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -105,8 +76,12 @@ class ChatHeader extends GetView<ChatController> {
             ),
           ),
 
-          // Date label on border
-          Center(child: ChatDateLabel(date: DateTime.now())),
+          // Date label on border - updates based on visible messages
+          Obx(
+            () => Center(
+              child: ChatDateLabel(date: controller.visibleDate.value),
+            ),
+          ),
         ],
       ),
     );

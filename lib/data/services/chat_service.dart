@@ -2,7 +2,7 @@ import 'package:amorra/data/models/chat_message_model.dart';
 import 'package:amorra/data/repositories/chat_repository.dart';
 
 /// Chat Service
-/// Business logic for chat operations
+/// Data access service for chat operations
 /// Note: Messages are saved by the backend API, this service only handles reading from Firestore
 class ChatService {
   final ChatRepository _chatRepository = ChatRepository();
@@ -23,3 +23,4 @@ class ChatService {
     return await _chatRepository.getRecentMessages(userId, limit);
   }
 }
+

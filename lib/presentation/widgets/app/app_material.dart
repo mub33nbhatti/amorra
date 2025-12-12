@@ -1,4 +1,4 @@
-import 'package:amorra/presentation/screens/not_found/not_found_screen.dart';
+import 'package:amorra/presentation/screens/main/not_found/not_found_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';

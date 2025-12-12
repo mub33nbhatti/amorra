@@ -26,11 +26,19 @@ service cloud.firestore {
       }
     }
 
-    // Messages
     match /messages/{messageId} {
-      allow read, write: if isAuthenticated()
-        && (resource.data.userId == request.auth.uid
-            || request.resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Nested structure: messages/{userId}/chats/{messageId}
+    match /messages/{userId} {
+      // Allow access to user's message document if they own it
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow access to chat messages subcollection
+      match /chats/{messageId} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
     }
 
     // Chat sessions

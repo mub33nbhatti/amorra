@@ -14,6 +14,7 @@ class ChatInputField extends StatefulWidget {
   final VoidCallback? onSend;
   final bool isLimitReached;
   final String? hintText;
+  final FocusNode? focusNode;
 
   const ChatInputField({
     super.key,
@@ -21,6 +22,7 @@ class ChatInputField extends StatefulWidget {
     this.onSend,
     this.isLimitReached = false,
     this.hintText,
+    this.focusNode,
   });
 
   @override
@@ -50,6 +52,13 @@ class _ChatInputFieldState extends State<ChatInputField> {
     final canSend = hasText && !widget.isLimitReached && widget.onSend != null;
 
     return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.lightGrey,
+          ),
+        ),
+      ),
       padding: AppSpacing.symmetric(context, h: 0.04, v: 0).copyWith(left: 0),
       child: SafeArea(
         top: false,
@@ -59,6 +68,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
             Expanded(
               child: TextField(
                 controller: widget.controller,
+                focusNode: widget.focusNode,
                 maxLines: null,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) {
@@ -91,8 +101,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
             GestureDetector(
               onTap: canSend ? widget.onSend : null,
               child: Container(
-                width: AppResponsive.iconSize(context, factor: 1.5),
-                height: AppResponsive.iconSize(context, factor: 1.5),
+                width: AppResponsive.iconSize(context, factor: 1.6),
+                height: AppResponsive.iconSize(context, factor: 1.6),
                 decoration: canSend
                     ? BoxDecoration(shape: BoxShape.circle).withAppGradient()
                     : BoxDecoration(
@@ -102,7 +112,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 child: Icon(
                   Iconsax.send_1,
                   color: AppColors.white,
-                  size: AppResponsive.iconSize(context, factor: 0.8),
+                  size: AppResponsive.iconSize(context, factor: 1),
                 ),
               ),
             ),

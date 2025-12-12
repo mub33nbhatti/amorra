@@ -213,9 +213,4 @@ class AgeVerificationController extends BaseController {
   void _navigateToMain() {
     Get.offAllNamed(AppRoutes.mainNavigation);
   }
-
-  /// Get stored age from local storage
-  int? getStoredAge() {
-    return _storage.read<int>('user_age');
-  }
 }

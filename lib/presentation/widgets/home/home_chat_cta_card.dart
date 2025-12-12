@@ -76,7 +76,7 @@ class HomeChatCtaCard extends StatelessWidget {
               Text(
                 _getMessageSnippet(lastMessageSnippet!),
                 style: AppTextStyles.bodyText(context).copyWith(
-                  color: AppColors.black,
+                  color: AppColors.white,
                   fontSize: AppResponsive.scaleSize(context, 14),
                 ),
                 maxLines: 2,
@@ -90,7 +90,7 @@ class HomeChatCtaCard extends StatelessWidget {
               Text(
                 _formatLastMessageTime(lastMessageTime!),
                 style: AppTextStyles.bodyText(context).copyWith(
-                  color: AppColors.grey,
+                  color: AppColors.white.withValues(alpha: 0.8),
                   fontSize: AppResponsive.scaleSize(context, 12),
                 ),
               ),
@@ -104,8 +104,8 @@ class HomeChatCtaCard extends StatelessWidget {
                 ? AppTexts.chatCtaButtonContinue
                 : AppTexts.chatCtaButtonStart,
             onPressed: onTap,
-            backgroundColor: hasActiveChat ? null : AppColors.white,
-            textColor: hasActiveChat ? null : AppColors.primary,
+            backgroundColor: AppColors.white,
+            textColor: AppColors.primary,
           ),
         ],
       ),

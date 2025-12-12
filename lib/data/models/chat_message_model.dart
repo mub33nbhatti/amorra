@@ -22,16 +22,55 @@ class ChatMessageModel extends BaseModel {
   });
 
   /// Create ChatMessageModel from Firestore document
+  /// Fields are at root level: text, timestamp, type, userId, id, chatSessionId, isTyping
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
     return ChatMessageModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
-      message: json['message'] ?? '',
+      message: json['text'] ?? '', // 'text' field contains the message content
       type: json['type'] ?? 'user',
-      timestamp: json['timestamp']?.toDate() ?? DateTime.now(),
-      isTyping: json['isTyping'] ?? false,
-      metadata: json['metadata'],
+      timestamp: _parseTimestamp(json['timestamp']),
+      isTyping: json['isTyping'] as bool? ?? false,
+      metadata: json['metadata'], // Keep for backward compatibility, but not used
     );
+  }
+  
+  /// Parse timestamp from various formats
+  static DateTime _parseTimestamp(dynamic timestamp) {
+    if (timestamp == null) return DateTime.now();
+    
+    // If it's already a DateTime
+    if (timestamp is DateTime) {
+      return timestamp;
+    }
+    
+    // If it's a Firestore Timestamp object (has toDate method)
+    try {
+      // Firestore Timestamp objects have a toDate() method
+      if (timestamp.toString().contains('Timestamp') || 
+          timestamp.runtimeType.toString().contains('Timestamp')) {
+        // Use dynamic call to handle Firestore Timestamp
+        return (timestamp as dynamic).toDate() as DateTime;
+      }
+    } catch (e) {
+      // If toDate() doesn't work, try other methods
+    }
+    
+    // If it's a Map with _seconds (serialized Firestore Timestamp)
+    if (timestamp is Map) {
+      if (timestamp.containsKey('_seconds')) {
+        final seconds = timestamp['_seconds'] as int?;
+        final nanoseconds = timestamp['_nanoseconds'] as int? ?? 0;
+        if (seconds != null) {
+          return DateTime.fromMillisecondsSinceEpoch(
+            seconds * 1000 + (nanoseconds ~/ 1000000),
+          );
+        }
+      }
+    }
+    
+    // Default fallback
+    return DateTime.now();
   }
 
   /// Convert ChatMessageModel to JSON for Firestore

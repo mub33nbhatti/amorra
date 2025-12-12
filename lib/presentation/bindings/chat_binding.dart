@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:amorra/presentation/controllers/chat/chat_controller.dart';
-import 'package:amorra/domain/services/chat_service.dart';
+import 'package:amorra/data/services/chat_service.dart';
 import 'package:amorra/data/repositories/chat_repository.dart';
 
 /// Chat Binding

@@ -1,10 +1,10 @@
 import 'package:amorra/presentation/bindings/profile_setup_binding.dart';
 import 'package:get/get.dart';
-import 'package:amorra/presentation/screens/splash/splash_screen.dart';
+import 'package:amorra/presentation/screens/auth/splash/splash_screen.dart';
 import 'package:amorra/presentation/screens/auth/auth_main/signup_screen.dart';
 import 'package:amorra/presentation/screens/auth/auth_main/signin_screen.dart';
 import 'package:amorra/presentation/screens/auth/age_verification/age_verification_screen.dart';
-import 'package:amorra/presentation/screens/main/main_navigation_screen.dart';
+import 'package:amorra/presentation/screens/main/main_navigation/main_navigation_screen.dart';
 import 'package:amorra/presentation/screens/auth/profile_setup/profile_setup_screen.dart';
 import 'package:amorra/presentation/screens/auth/onboarding/onboarding_screen.dart';
 import 'package:amorra/presentation/bindings/auth_binding.dart';

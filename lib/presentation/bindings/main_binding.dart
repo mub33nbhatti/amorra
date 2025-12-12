@@ -37,8 +37,13 @@ class MainBinding extends Bindings {
       Get.lazyPut(() => SubscriptionController());
     }
 
+    // Register MainNavigationController first (not lazy) so it can coordinate refreshes
+    // This ensures it's available to listen to user changes immediately
+    if (!Get.isRegistered<MainNavigationController>()) {
+      Get.put(MainNavigationController(), permanent: false);
+    }
+    
     // Register all main navigation controllers
-    Get.lazyPut(() => MainNavigationController());
     Get.lazyPut(() => HomeController());
     Get.lazyPut(() => ChatController());
     Get.lazyPut(() => ProfileController());

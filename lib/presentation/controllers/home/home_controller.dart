@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:amorra/data/models/chat_message_model.dart';
 import 'package:amorra/data/models/user_model.dart';
 import 'package:amorra/data/models/daily_suggestion_model.dart';
@@ -11,6 +12,7 @@ import 'package:amorra/core/config/routes.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
 import 'package:amorra/presentation/controllers/main/main_navigation_controller.dart';
+import 'package:amorra/presentation/controllers/chat/chat_controller.dart';
 
 /// Home Controller
 /// Handles home screen logic and state
@@ -47,17 +49,34 @@ class HomeController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    // Delay setup slightly to ensure AuthController is fully initialized
-    // This prevents race conditions when navigating after logout/login
+    // Set up user listener immediately (synchronously) to catch all changes
+    _setupUserListener();
+    
+    // Set up listener for chat messages to update last message in real-time
+    _setupChatMessagesListener();
+    
+    // Delay other setup slightly to ensure AuthController is fully initialized
     Future.microtask(() {
       try {
-        _setupUserListener();
         _setupSuggestionsListener();
         _initializeData();
       } catch (e) {
         if (kDebugMode) {
           print('Error in HomeController delayed init: $e');
         }
+      }
+    });
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Refresh all data when controller becomes ready
+    // This handles the case where a new user logs in after the controller is initialized
+    Future.microtask(() {
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
+        handleUserChange(authController.currentUser.value);
       }
     });
   }
@@ -87,13 +106,22 @@ class HomeController extends BaseController {
           isSuggestionsLoading.value = false;
         },
         onError: (error) {
-          if (kDebugMode) {
-            print('❌ Error listening to suggestions stream: $error');
+          // Only log error if user is still authenticated
+          // Permission errors are expected when user logs out
+          if (userId != null) {
+            if (kDebugMode) {
+              print('❌ Error listening to suggestions stream: $error');
+            }
+            setError('Failed to load suggestions');
+            // Set empty list on error
+            dailySuggestions.value = [];
+            isSuggestionsLoading.value = false;
+          } else {
+            // User logged out, silently ignore permission errors
+            if (kDebugMode) {
+              print('ℹ️ Suggestions stream error after logout (expected): $error');
+            }
           }
-          setError('Failed to load suggestions');
-          // Set empty list on error
-          dailySuggestions.value = [];
-          isSuggestionsLoading.value = false;
         },
         cancelOnError: false, // Keep listening even on error
       );
@@ -112,87 +140,106 @@ class HomeController extends BaseController {
 
   /// Setup listener for user changes
   void _setupUserListener() {
-    // Use a delayed approach to ensure AuthController is ready
-    Future.microtask(() {
-      try {
-        // Check if AuthController is registered before accessing it
-        if (!Get.isRegistered<AuthController>()) {
-          if (kDebugMode) {
-            print('⚠️ AuthController not registered, setting default userName');
-          }
-          userName.value = 'there';
-          isUserNameLoading.value = false;
-          return;
-        }
-
-        final authController = Get.find<AuthController>();
-        
-        // Listen to currentUser changes reactively
-        ever(authController.currentUser, (UserModel? user) {
-          // Check if controller still exists before accessing
-          if (!Get.isRegistered<AuthController>()) {
-            return;
-          }
-          
-          try {
-            if (user != null) {
-              userName.value = user.name;
-              isUserNameLoading.value = false;
-              // Refresh chat data when user is available
-              if (userId != null) {
-                _checkActiveChat();
-              }
-            } else {
-              userName.value = 'there';
-              isUserNameLoading.value = false;
-            }
-          } catch (e) {
-            if (kDebugMode) {
-              print('Error in user listener callback: $e');
-            }
-            userName.value = 'there';
-            isUserNameLoading.value = false;
-          }
-        });
-        
-        // Set initial user if available
-        try {
-          if (authController.currentUser.value != null) {
-            userName.value = authController.currentUser.value!.name;
-            isUserNameLoading.value = false;
-          } else {
-            userName.value = 'there';
-            isUserNameLoading.value = false;
-          }
-        } catch (e) {
-          if (kDebugMode) {
-            print('Error getting initial user: $e');
-          }
-          userName.value = 'there';
-          isUserNameLoading.value = false;
-        }
-      } catch (e) {
+    try {
+      // Check if AuthController is registered before accessing it
+      if (!Get.isRegistered<AuthController>()) {
         if (kDebugMode) {
-          print('Error setting up user listener: $e');
+          print('⚠️ AuthController not registered, setting default userName');
         }
         userName.value = 'there';
         isUserNameLoading.value = false;
+        // Try again after a delay
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (Get.isRegistered<AuthController>()) {
+            _setupUserListener();
+          }
+        });
+        return;
       }
-    });
+
+      final authController = Get.find<AuthController>();
+      
+        // Listen to currentUser changes reactively
+        // This will fire whenever currentUser.value changes
+        ever(authController.currentUser, (UserModel? user) {
+          handleUserChange(user);
+        });
+      
+      // Immediately check and handle the current user value
+      // This ensures we catch the user if they're already logged in
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        handleUserChange(authController.currentUser.value);
+      });
+      
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error setting up user listener: $e');
+      }
+      userName.value = 'there';
+      isUserNameLoading.value = false;
+    }
+  }
+
+  /// Handle user change (called by listener and manually)
+  /// Made public so MainNavigationController can call it
+  void handleUserChange(UserModel? user) {
+    try {
+      if (user != null && user.name.isNotEmpty) {
+        if (kDebugMode) {
+          print('👤 User changed in HomeController: ${user.name} (ID: ${user.id})');
+        }
+        // Set user name IMMEDIATELY (synchronously) - don't wait for async operations
+        userName.value = user.name;
+        isUserNameLoading.value = false;
+        
+        // Cancel old suggestions stream first
+        _suggestionsSubscription?.cancel();
+        _suggestionsSubscription = null;
+        dailySuggestions.clear();
+        isSuggestionsLoading.value = true; // Show loading while fetching
+        
+        // Re-setup suggestions stream for the new user FIRST (this is critical)
+        _setupSuggestionsListener();
+        
+        // Then re-initialize all other data (async, but doesn't block UI)
+        _initializeData();
+      } else {
+        // User logged out or name is empty - cancel stream and reset state
+        if (kDebugMode) {
+          print('👤 User logged out or name empty, resetting HomeController');
+        }
+        _suggestionsSubscription?.cancel();
+        _suggestionsSubscription = null;
+        dailySuggestions.clear();
+        hasActiveChat.value = false;
+        lastMessage.value = null;
+        userName.value = 'there';
+        isUserNameLoading.value = false;
+        isSuggestionsLoading.value = false;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error handling user change: $e');
+      }
+      userName.value = 'there';
+      isUserNameLoading.value = false;
+      isSuggestionsLoading.value = false;
+    }
   }
 
   /// Initialize all data
   Future<void> _initializeData() async {
     try {
-      setLoading(true);
-
-      // Set time-based greeting
+      // Don't set loading=true here as it blocks the UI
+      // Only set loading for specific operations that need it
+      
+      // Set time-based greeting (synchronous)
       greeting.value = _getTimeBasedGreeting();
 
       // Note: Daily suggestions are loaded via stream listener
       // No need to load separately as stream will provide initial data
 
-      // Check active chat and get last message
+      // Check active chat and get last message (async, but doesn't block)
       if (Get.isRegistered<AuthController>()) {
         final currentUserId = userId;
         if (currentUserId != null) {
@@ -203,12 +250,10 @@ class HomeController extends BaseController {
         }
       }
     } catch (e) {
-      setError(e.toString());
       if (kDebugMode) {
         print('❌ Error initializing data: $e');
       }
-    } finally {
-      setLoading(false);
+      // Don't set error here as it might show error messages unnecessarily
     }
   }
 
@@ -243,7 +288,63 @@ class HomeController extends BaseController {
     }
   }
 
-  /// Get last message
+  /// Setup listener for chat messages to update last message in real-time
+  void _setupChatMessagesListener() {
+    try {
+      // Wait for ChatController to be registered
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (Get.isRegistered<ChatController>()) {
+          final chatController = Get.find<ChatController>();
+          
+          // Listen to messages changes and update last message and active chat status
+          ever(chatController.messages, (List<ChatMessageModel> messages) {
+            _updateLastMessageFromChat(messages);
+          });
+          
+          // Immediately update with current messages
+          if (chatController.messages.isNotEmpty) {
+            _updateLastMessageFromChat(chatController.messages);
+          }
+        } else {
+          // Retry if ChatController not ready yet
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (Get.isRegistered<ChatController>()) {
+              _setupChatMessagesListener();
+            }
+          });
+        }
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error setting up chat messages listener: $e');
+      }
+    }
+  }
+
+  /// Update last message from ChatController's messages list
+  void _updateLastMessageFromChat(List<ChatMessageModel> messages) {
+    try {
+      if (messages.isNotEmpty) {
+        // Get the last message (messages are sorted by timestamp)
+        final latestMessage = messages.last;
+        lastMessage.value = latestMessage;
+        hasActiveChat.value = true;
+        
+        if (kDebugMode) {
+          print('📝 Updated last message in HomeController: ${latestMessage.message.substring(0, latestMessage.message.length > 30 ? 30 : latestMessage.message.length)}...');
+        }
+      } else {
+        lastMessage.value = null;
+        hasActiveChat.value = false;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating last message from chat: $e');
+      }
+    }
+  }
+
+  /// Get last message (fallback method - called during initialization)
   Future<void> _getLastMessage() async {
     try {
       if (!Get.isRegistered<AuthController>()) {
@@ -271,6 +372,14 @@ class HomeController extends BaseController {
   /// Navigate to chat screen
   void navigateToChat({String? starterMessage}) {
     try {
+      // If there's a starter message, set it in ChatController first
+      if (starterMessage != null && starterMessage.isNotEmpty) {
+        if (Get.isRegistered<ChatController>()) {
+          final chatController = Get.find<ChatController>();
+          chatController.setPendingStarterMessage(starterMessage);
+        }
+      }
+      
       // Get MainNavigationController and change to chat tab (index 1)
       final mainNavController = Get.find<MainNavigationController>();
       mainNavController.changeTab(1); // Chat tab index
@@ -281,12 +390,6 @@ class HomeController extends BaseController {
       // Fallback: try to navigate using route
       Get.toNamed(AppRoutes.chat, arguments: {'starterMessage': starterMessage});
     }
-  }
-
-  /// Refresh home screen data
-  @override
-  Future<void> refresh() async {
-    await _initializeData();
   }
 }
 

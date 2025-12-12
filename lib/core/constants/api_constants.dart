@@ -4,17 +4,19 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Contains API endpoints and configuration
 class ApiConstants {
   // Base URLs - Load from environment variables with fallback defaults
-  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://api.amorra.app';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://ammora.onrender.com';
   static String get aiApiBaseUrl => dotenv.env['AI_API_BASE_URL'] ?? 'https://api.openai.com/v1';
 
   // API Endpoints
-  static const String endpointChat = '/chat/completions';
+  static const String endpointChat = '/api/chat';
+  static const String endpointChatCompletions = '/chat/completions';
   static const String endpointModeration = '/moderations';
 
   // Headers
   static const String headerContentType = 'Content-Type';
   static const String headerAuthorization = 'Authorization';
   static const String headerBearer = 'Bearer';
+  static const String headerApiKey = 'X-API-Key';
   static const String contentTypeJson = 'application/json';
 
   // Request Timeouts

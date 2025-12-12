@@ -1,39 +1,147 @@
+import 'dart:convert';
 import 'package:amorra/core/config/app_config.dart';
+import 'package:amorra/core/constants/api_constants.dart';
+import 'package:amorra/data/services/firebase_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Chat API Service
-/// Placeholder service for chat-related API calls
-/// TODO: Replace all methods with actual API endpoints when backend is ready
-
+/// Handles chat-related API calls to backend
 class ChatApiService {
-  /// Send message to AI
-  /// TODO: Replace with actual POST endpoint
-  /// Expected endpoint: POST /api/chat/send
-  /// Request body: { "userId": string, "message": string, "preferences": object }
-  /// Response: { "messageId": string, "status": string }
+  final FirebaseService _firebaseService = FirebaseService();
+
+  /// Send message to AI via backend API
+  /// 
+  /// Request: POST /api/chat
+  /// Body: { "user_id": string, "chat_session_id": string, "message": string }
+  /// Headers: Authorization: Bearer <Firebase ID Token>
+  /// Response: { "success": bool, "message": string, "model": string, "user_message_id": string, "ai_message_id": string, ... }
+  /// 
+  /// Includes retry logic with exponential backoff
   Future<Map<String, dynamic>> sendMessageToAI({
     required String userId,
     required String message,
-    Map<String, dynamic>? preferences,
+    String chatSessionId = 'session_001', // Hardcoded for testing
   }) async {
-    // TODO: Replace with actual API call
-    // Example implementation:
-    // final response = await http.post(
-    //   Uri.parse('$baseUrl/api/chat/send'),
-    //   headers: {'Content-Type': 'application/json'},
-    //   body: jsonEncode({
-    //     'userId': userId,
-    //     'message': message,
-    //     'preferences': preferences,
-    //   }),
-    // );
-    // return jsonDecode(response.body);
-
-    // Placeholder return
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {
-      'messageId': DateTime.now().millisecondsSinceEpoch.toString(),
-      'status': 'sent',
+    // Use the correct backend URL (override .env if it has wrong value)
+    final baseUrl = 'https://ammora.onrender.com';
+    final url = Uri.parse('$baseUrl${ApiConstants.endpointChat}');
+    
+    // Get Firebase ID token for authentication
+    String? idToken;
+    try {
+      final currentUser = _firebaseService.currentUser;
+      if (currentUser != null) {
+        idToken = await currentUser.getIdToken();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting Firebase ID token: $e');
+      }
+      // Continue without token - backend might handle it
+    }
+    
+    final requestBody = {
+      'user_id': userId,
+      'chat_session_id': chatSessionId,
+      'message': message,
     };
+
+    // Get API key from environment or use default test key
+    // Backend expects X-API-Key header with value "321" for testing
+    final apiKey = dotenv.env['BACKEND_API_KEY'] ?? '321';
+    
+    // Prepare headers
+    final headers = <String, String>{
+      ApiConstants.headerContentType: ApiConstants.contentTypeJson,
+      ApiConstants.headerApiKey: apiKey, // Backend requires X-API-Key header
+    };
+
+    int attempt = 0;
+    Exception? lastException;
+
+    while (attempt < AppConfig.maxRetryAttempts) {
+      try {
+        if (kDebugMode && attempt > 0) {
+          print('Retrying chat API call (attempt ${attempt + 1}/${AppConfig.maxRetryAttempts})');
+        }
+
+        // Refresh token on retry if needed
+        if (attempt > 0 && idToken != null) {
+          try {
+            final currentUser = _firebaseService.currentUser;
+            if (currentUser != null) {
+              idToken = await currentUser.getIdToken(true); // Force refresh
+              headers[ApiConstants.headerAuthorization] = '${ApiConstants.headerBearer} $idToken';
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              print('Error refreshing token on retry: $e');
+            }
+          }
+        }
+
+        final response = await http
+            .post(
+              url,
+              headers: headers,
+              body: jsonEncode(requestBody),
+            )
+            .timeout(ApiConstants.connectTimeout);
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          
+          // Check if backend returned success: false
+          if (data['success'] == false) {
+            final errorMessage = data['error'] ?? 'Unknown error from backend';
+            if (kDebugMode) {
+              print('Backend error response: $errorMessage');
+              print('Response body: ${response.body}');
+            }
+            throw Exception(errorMessage);
+          }
+          
+          return data;
+        } else {
+          // Log response for debugging
+          if (kDebugMode) {
+            print('API Error - Status: ${response.statusCode}');
+            print('Response body: ${response.body}');
+            print('Request headers sent: $headers');
+          }
+          
+          // Non-200 status code - retry if it's a server error (5xx)
+          if (response.statusCode >= 500 && attempt < AppConfig.maxRetryAttempts - 1) {
+            lastException = Exception('Server error: ${response.statusCode}');
+            await Future.delayed(AppConfig.retryDelay * (attempt + 1));
+            attempt++;
+            continue;
+          }
+          
+          // Client error (4xx) or final retry attempt - don't retry
+          final errorBody = response.body.isNotEmpty 
+              ? jsonDecode(response.body) 
+              : {'error': 'HTTP ${response.statusCode}'};
+          throw Exception(errorBody['error'] ?? 'HTTP ${response.statusCode}');
+        }
+      } catch (e) {
+        lastException = e is Exception ? e : Exception(e.toString());
+        
+        // Don't retry on timeout or network errors if it's the last attempt
+        if (attempt >= AppConfig.maxRetryAttempts - 1) {
+          rethrow;
+        }
+        
+        // Wait before retrying with exponential backoff
+        await Future.delayed(AppConfig.retryDelay * (attempt + 1));
+        attempt++;
+      }
+    }
+
+    // Should never reach here, but just in case
+    throw lastException ?? Exception('Failed to send message after ${AppConfig.maxRetryAttempts} attempts');
   }
 
   /// Get AI response for a message
