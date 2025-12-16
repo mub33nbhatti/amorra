@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:amorra/core/config/app_config.dart';
 import 'package:amorra/core/constants/api_constants.dart';
 import 'package:amorra/data/services/firebase_service.dart';
@@ -14,39 +15,30 @@ class ChatApiService {
   /// Send message to AI via backend API
   /// 
   /// Request: POST /api/chat
-  /// Body: { "user_id": string, "chat_session_id": string, "message": string }
-  /// Headers: Authorization: Bearer <Firebase ID Token>
-  /// Response: { "success": bool, "message": string, "model": string, "user_message_id": string, "ai_message_id": string, ... }
+  /// Body: { "user_id": string, "message": string, "chat_session_id"?: string (optional) }
+  /// Headers: X-API-Key: <API_KEY>
+  /// Response: { "message": string, "thread_id": string }
   /// 
+  /// The API automatically manages conversation history and memory.
   /// Includes retry logic with exponential backoff
   Future<Map<String, dynamic>> sendMessageToAI({
     required String userId,
     required String message,
-    String chatSessionId = 'session_001', // Hardcoded for testing
+    String? chatSessionId,
   }) async {
     // Use the correct backend URL (override .env if it has wrong value)
-    final baseUrl = 'https://ammora.onrender.com';
+    final baseUrl = ApiConstants.baseUrl;
     final url = Uri.parse('$baseUrl${ApiConstants.endpointChat}');
     
-    // Get Firebase ID token for authentication
-    String? idToken;
-    try {
-      final currentUser = _firebaseService.currentUser;
-      if (currentUser != null) {
-        idToken = await currentUser.getIdToken();
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting Firebase ID token: $e');
-      }
-      // Continue without token - backend might handle it
-    }
-    
-    final requestBody = {
+    final requestBody = <String, dynamic>{
       'user_id': userId,
-      'chat_session_id': chatSessionId,
       'message': message,
     };
+    
+    // Add chat_session_id only if provided (optional)
+    if (chatSessionId != null && chatSessionId.isNotEmpty) {
+      requestBody['chat_session_id'] = chatSessionId;
+    }
 
     // Get API key from environment or use default test key
     // Backend expects X-API-Key header with value "321" for testing
@@ -67,21 +59,6 @@ class ChatApiService {
           print('Retrying chat API call (attempt ${attempt + 1}/${AppConfig.maxRetryAttempts})');
         }
 
-        // Refresh token on retry if needed
-        if (attempt > 0 && idToken != null) {
-          try {
-            final currentUser = _firebaseService.currentUser;
-            if (currentUser != null) {
-              idToken = await currentUser.getIdToken(true); // Force refresh
-              headers[ApiConstants.headerAuthorization] = '${ApiConstants.headerBearer} $idToken';
-            }
-          } catch (e) {
-            if (kDebugMode) {
-              print('Error refreshing token on retry: $e');
-            }
-          }
-        }
-
         final response = await http
             .post(
               url,
@@ -91,19 +68,44 @@ class ChatApiService {
             .timeout(ApiConstants.connectTimeout);
 
         if (response.statusCode == 200) {
-          final data = jsonDecode(response.body) as Map<String, dynamic>;
+          final responseData = jsonDecode(response.body) as Map<String, dynamic>;
           
-          // Check if backend returned success: false
-          if (data['success'] == false) {
-            final errorMessage = data['error'] ?? 'Unknown error from backend';
-            if (kDebugMode) {
-              print('Backend error response: $errorMessage');
-              print('Response body: ${response.body}');
-            }
-            throw Exception(errorMessage);
+          // API response format: { "data": { "message": string, "thread_id": string, ... }, "success": bool }
+          // Extract the actual data object
+          Map<String, dynamic>? messageData;
+          
+          if (responseData['data'] != null) {
+            messageData = responseData['data'] as Map<String, dynamic>?;
+          } else if (responseData['message'] != null) {
+            // Fallback: direct message format (for backward compatibility)
+            messageData = responseData;
           }
           
-          return data;
+          // Validate response has required fields
+          if (messageData == null || messageData['message'] == null) {
+            if (kDebugMode) {
+              print('⚠️ API response missing "message" field');
+              print('Response body: ${response.body}');
+              print('Parsed data: $responseData');
+            }
+            throw Exception('Invalid API response: missing message field');
+          }
+          
+          // Extract message and thread_id from the data object
+          final message = messageData['message'].toString();
+          final threadId = messageData['thread_id']?.toString();
+          
+          if (kDebugMode) {
+            print('✅ Chat API response received');
+            print('  - Message: ${message.substring(0, message.length > 50 ? 50 : message.length)}...');
+            print('  - Thread ID: ${threadId ?? 'not provided'}');
+          }
+          
+          // Return normalized response format: { "message": string, "thread_id": string }
+          return {
+            'message': message,
+            if (threadId != null) 'thread_id': threadId,
+          };
         } else {
           // Log response for debugging
           if (kDebugMode) {
@@ -207,6 +209,84 @@ class ChatApiService {
     // In production, this should check free trial status from backend
     await Future.delayed(const Duration(milliseconds: 200));
     return AppConfig.freeMessageLimit;
+  }
+
+  /// Update AI context when user preferences change
+  /// 
+  /// Request: POST /api/update-context
+  /// Body: { "user_id": string }
+  /// Headers: X-API-Key: <API_KEY>
+  /// Response: { "success": bool, "message": string }
+  /// 
+  /// Call this immediately after a user saves new profile settings
+  /// to notify the active AI conversation that preferences have changed.
+  Future<Map<String, dynamic>> updateContext({
+    required String userId,
+  }) async {
+    try {
+      final baseUrl = ApiConstants.baseUrl;
+      final url = Uri.parse('$baseUrl${ApiConstants.endpointUpdateContext}');
+      
+      // Get API key from environment or use default
+      final apiKey = dotenv.env['BACKEND_API_KEY'] ?? '321';
+      
+      final requestBody = {
+        'user_id': userId,
+      };
+      
+      if (kDebugMode) {
+        print('🔄 Updating AI context for user: $userId');
+        print('  - URL: $url');
+      }
+      
+      final response = await http.post(
+        url,
+        headers: {
+          ApiConstants.headerContentType: ApiConstants.contentTypeJson,
+          ApiConstants.headerApiKey: apiKey,
+        },
+        body: jsonEncode(requestBody),
+      ).timeout(ApiConstants.connectTimeout);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        
+        if (kDebugMode) {
+          print('✅ AI context updated successfully');
+          print('  - Response: ${data['message'] ?? 'Success'}');
+        }
+        
+        return data;
+      } else {
+        // Try to parse error message from response
+        String errorMessage = 'Failed to update AI context';
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['error']?.toString() ?? errorData['message']?.toString() ?? errorMessage;
+        } catch (_) {
+          errorMessage = 'Server error: ${response.statusCode}';
+        }
+        
+        if (kDebugMode) {
+          print('❌ Failed to update AI context: $errorMessage');
+          print('  - Status: ${response.statusCode}');
+          print('  - Body: ${response.body}');
+        }
+        
+        throw Exception(errorMessage);
+      }
+    } on SocketException catch (e) {
+      final errorMessage = 'Cannot connect to backend server: ${e.message}';
+      if (kDebugMode) {
+        print('❌ Network error updating context: $errorMessage');
+      }
+      throw Exception('$errorMessage\n\nPlease check:\n1. Backend server is running\n2. API_BASE_URL in .env file is correct\n3. Internet connection is active');
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Update context error: $e');
+      }
+      rethrow;
+    }
   }
 }
 

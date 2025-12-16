@@ -4,6 +4,7 @@ import 'package:amorra/core/utils/app_colors/app_colors.dart';
 import 'package:amorra/core/utils/app_responsive/app_responsive.dart';
 import 'package:amorra/core/utils/app_spacing/app_spacing.dart';
 import 'package:amorra/core/utils/app_styles/app_text_styles.dart';
+import 'package:amorra/core/utils/text_formatter.dart';
 import 'package:amorra/core/constants/app_constants.dart';
 import 'package:amorra/core/utils/app_lotties/app_lotties.dart';
 import 'package:amorra/presentation/widgets/common/ai_avatar.dart';
@@ -94,12 +95,39 @@ class ChatMessageBubble extends StatelessWidget {
                           repeat: true,
                         ),
                       )
-                    : Text(
-                        message,
-                        style: AppTextStyles.bodyText(context).copyWith(
-                          color: AppColors.white,
-                          fontSize: AppResponsive.scaleSize(context, 14),
-                          height: 1.3,
+                    : RichText(
+                        text: TextFormatter.parseMarkdown(
+                          message,
+                          baseStyle: AppTextStyles.bodyText(context).copyWith(
+                            color: AppColors.white,
+                            fontSize: AppResponsive.scaleSize(context, 14),
+                            height: 1.3,
+                          ),
+                          boldStyle: AppTextStyles.bodyText(context).copyWith(
+                            color: AppColors.white,
+                            fontSize: AppResponsive.scaleSize(context, 14),
+                            height: 1.3,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          italicStyle: AppTextStyles.bodyText(context).copyWith(
+                            color: AppColors.white,
+                            fontSize: AppResponsive.scaleSize(context, 14),
+                            height: 1.3,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          codeStyle: AppTextStyles.bodyText(context).copyWith(
+                            color: AppColors.white,
+                            fontSize: AppResponsive.scaleSize(context, 13),
+                            height: 1.3,
+                            fontFamily: 'monospace',
+                            backgroundColor: AppColors.white.withOpacity(0.2),
+                          ),
+                          strikethroughStyle: AppTextStyles.bodyText(context).copyWith(
+                            color: AppColors.white,
+                            fontSize: AppResponsive.scaleSize(context, 14),
+                            height: 1.3,
+                            decoration: TextDecoration.lineThrough,
+                          ),
                         ),
                       ),
               ),

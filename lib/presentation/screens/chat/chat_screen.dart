@@ -76,7 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
 
-              // Input Field
+              // Input Field - wrapped in Flexible to prevent overflow
               Obx(
                 () => ChatInputField(
                   controller: controller.inputController,

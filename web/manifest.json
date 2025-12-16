@@ -1,11 +1,11 @@
 {
-    "name": "amorra",
-    "short_name": "amorra",
+    "name": "Amorra AI",
+    "short_name": "Amorra AI",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Flutter Mobile Application named as Amorra. AI Companion for Men 50+, Emotional & Romantic Support Chat Partner",
+    "background_color": "#FFFFFF",
+    "theme_color": "#FFFFFF",
+    "description": "Amorra AI - AI Companion for Men 50+, Emotional & Romantic Support Chat Partner",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

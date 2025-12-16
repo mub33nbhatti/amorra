@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:amorra/core/config/routes.dart';
 import 'package:amorra/core/utils/app_texts/app_texts.dart';
 import 'package:amorra/data/services/firebase_service.dart';
+import 'package:amorra/data/services/chat_api_service.dart';
 import 'package:amorra/core/constants/app_constants.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 
@@ -14,6 +15,7 @@ import 'package:amorra/presentation/controllers/base_controller.dart';
 /// Handles profile setup form state and validation
 class ProfileSetupController extends BaseController {
   final FirebaseService _firebaseService = FirebaseService();
+  final ChatApiService _chatApiService = ChatApiService();
   final _storage = GetStorage();
 
   // Animation state
@@ -482,6 +484,20 @@ class ProfileSetupController extends BaseController {
       // Save to Firestore
       await _savePreferencesToFirestore(currentUser.uid, preferences);
 
+      // Update AI context with new preferences
+      try {
+        await _chatApiService.updateContext(userId: currentUser.uid);
+        if (kDebugMode) {
+          print('✅ AI context updated with new preferences');
+        }
+      } catch (e) {
+        // Log error but don't fail the entire operation
+        if (kDebugMode) {
+          print('⚠️ Failed to update AI context: $e');
+        }
+        // Continue with the flow even if context update fails
+      }
+
       if (kDebugMode) {
         print('✅ Profile preferences updated');
       }
@@ -561,6 +577,20 @@ class ProfileSetupController extends BaseController {
       // TODO: Replace with actual API call to save preferences
       // This will call ProfileApiService.savePreferences() when API is integrated
       await _savePreferencesToFirestore(currentUser.uid, preferences);
+
+      // Update AI context with new preferences
+      try {
+        await _chatApiService.updateContext(userId: currentUser.uid);
+        if (kDebugMode) {
+          print('✅ AI context updated with new preferences');
+        }
+      } catch (e) {
+        // Log error but don't fail the entire operation
+        if (kDebugMode) {
+          print('⚠️ Failed to update AI context: $e');
+        }
+        // Continue with the flow even if context update fails
+      }
 
       // Mark profile setup as completed in local storage
       await _storage.write(AppConstants.storageKeyProfileSetupCompleted, true);

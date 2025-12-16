@@ -37,6 +37,11 @@ class ChatController extends BaseController {
 
   // Scroll controller for messages list (managed by controller for better control)
   final ScrollController scrollController = ScrollController();
+  
+  // Track pending messages to prevent duplicates
+  // Key: message content + type + timestamp (rounded to seconds)
+  // Value: temp message ID
+  final Map<String, String> _pendingMessages = {};
 
   // Computed
   bool get canSendMessage {
@@ -258,6 +263,7 @@ class ChatController extends BaseController {
     _cancelMessagesStream();
     scrollController.dispose();
     inputController.dispose();
+    _pendingMessages.clear(); // Clean up pending messages tracking
     super.onClose();
   }
 
@@ -295,46 +301,124 @@ class ChatController extends BaseController {
         print('📡 Firestore stream update: ${newMessages.length} messages');
       }
       
-      // Get Firestore message IDs
-      final firestoreIds = newMessages.map((m) => m.id).toSet();
-      
-      // Find local temp messages (messages not in Firestore yet)
-      // Temp messages are recent (within last 10 seconds) and not in Firestore
+      // Clean up old pending messages (older than 30 seconds)
       final now = DateTime.now();
-      final localTempMessages = messages.where((localMsg) {
-        final isRecent = now.difference(localMsg.timestamp).inSeconds < 10;
-        final notInFirestore = !firestoreIds.contains(localMsg.id);
-        return isRecent && notInFirestore;
-      }).toList();
+      _pendingMessages.removeWhere((key, value) {
+        // Extract timestamp from key (format: "content|type|timestamp")
+        final parts = key.split('|');
+        if (parts.length >= 3) {
+          try {
+            final timestamp = DateTime.parse(parts[2]);
+            return now.difference(timestamp).inSeconds > 30;
+          } catch (e) {
+            return true; // Remove invalid keys
+          }
+        }
+        return true; // Remove malformed keys
+      });
       
       // Start with Firestore messages (source of truth)
       final mergedMessages = List<ChatMessageModel>.from(newMessages);
       
-      // Add local temp messages that aren't in Firestore yet
-      // These will be replaced when Firestore updates
+      // Find local temp messages that need to be checked
+      final currentMessages = List<ChatMessageModel>.from(messages);
+      final localTempMessages = currentMessages.where((localMsg) {
+        // Temp messages have IDs starting with "temp_"
+        final isTemp = localMsg.id.startsWith('temp_');
+        // Only consider recent temp messages (within last 15 seconds)
+        final isRecent = now.difference(localMsg.timestamp).inSeconds < 15;
+        return isTemp && isRecent;
+      }).toList();
+      
+      // Check each temp message against Firestore messages
       for (var tempMsg in localTempMessages) {
-        // Check if Firestore has a message with same content (might have different ID)
-        final hasMatchingContent = newMessages.any((fsMsg) => 
-          fsMsg.message == tempMsg.message && 
-          fsMsg.type == tempMsg.type &&
-          (fsMsg.timestamp.difference(tempMsg.timestamp).inSeconds.abs() < 5)
+        // Try to find matching Firestore message by content, type, and timestamp
+        final matchingFirestoreMsg = newMessages.firstWhere(
+          (fsMsg) {
+            // Match by content and type
+            final contentMatch = fsMsg.message.trim() == tempMsg.message.trim();
+            final typeMatch = fsMsg.type == tempMsg.type;
+            // Match by timestamp (within 10 seconds window)
+            final timeDiff = fsMsg.timestamp.difference(tempMsg.timestamp).inSeconds.abs();
+            final timeMatch = timeDiff < 10;
+            
+            return contentMatch && typeMatch && timeMatch;
+          },
+          orElse: () => ChatMessageModel(
+            id: '',
+            userId: '',
+            message: '',
+            type: '',
+            timestamp: DateTime.now(),
+          ),
         );
         
-        if (!hasMatchingContent) {
-          // No matching content in Firestore yet, keep temp message
-          mergedMessages.add(tempMsg);
+        // If we found a match, remove the temp message from pending tracking
+        if (matchingFirestoreMsg.id.isNotEmpty) {
+          // Create key for pending message tracking
+          final pendingKey = _createPendingMessageKey(
+            tempMsg.message.trim(),
+            tempMsg.type,
+            tempMsg.timestamp,
+          );
+          _pendingMessages.remove(pendingKey);
+          
+          if (kDebugMode) {
+            print('✅ Matched temp message with Firestore message: ${tempMsg.message.substring(0, tempMsg.message.length > 30 ? 30 : tempMsg.message.length)}...');
+          }
+          // Don't add temp message - Firestore version is already in mergedMessages
+        } else {
+          // No match found yet, keep temp message
+          // But check if we already have this temp message in merged list
+          final alreadyInList = mergedMessages.any((msg) => msg.id == tempMsg.id);
+          if (!alreadyInList) {
+            mergedMessages.add(tempMsg);
+          }
+        }
+      }
+      
+      // Remove duplicates by content + type + timestamp (within 2 seconds)
+      // This is a safety net in case matching logic misses something
+      final deduplicatedMessages = <ChatMessageModel>[];
+      final seenKeys = <String>{};
+      
+      for (var msg in mergedMessages) {
+        final key = _createMessageKey(msg.message.trim(), msg.type, msg.timestamp);
+        
+        // Check if we've seen a similar message recently
+        bool isDuplicate = false;
+        for (var seenKey in seenKeys) {
+          final parts = seenKey.split('|');
+          if (parts.length >= 3) {
+            final seenContent = parts[0];
+            final seenType = parts[1];
+            final seenTimestamp = DateTime.parse(parts[2]);
+            
+            // Same content and type, and within 2 seconds
+            if (seenContent == msg.message.trim() &&
+                seenType == msg.type &&
+                msg.timestamp.difference(seenTimestamp).inSeconds.abs() < 2) {
+              isDuplicate = true;
+              break;
+            }
+          }
+        }
+        
+        if (!isDuplicate) {
+          deduplicatedMessages.add(msg);
+          seenKeys.add(key);
         }
       }
       
       // Sort by timestamp
-      mergedMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+      deduplicatedMessages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       
       if (kDebugMode) {
-        print('  - Merged: ${mergedMessages.length} messages (${newMessages.length} from Firestore, ${localTempMessages.length} temp)');
+        print('  - Merged: ${deduplicatedMessages.length} messages (${newMessages.length} from Firestore, ${localTempMessages.length} temp, removed ${mergedMessages.length - deduplicatedMessages.length} duplicates)');
       }
       
       // Update messages list
-      messages.value = mergedMessages;
+      messages.value = deduplicatedMessages;
       
       // Update visible date if we have messages
       if (mergedMessages.isNotEmpty) {
@@ -504,6 +588,14 @@ class ChatController extends BaseController {
         timestamp: userMessageTimestamp,
       );
       
+      // Track this pending message
+      final pendingKey = _createPendingMessageKey(
+        messageText.trim(),
+        'user',
+        userMessageTimestamp,
+      );
+      _pendingMessages[pendingKey] = tempUserMessageId;
+      
       // Add user message to the list immediately
       final updatedMessages = List<ChatMessageModel>.from(messages);
       updatedMessages.add(userMessage);
@@ -552,33 +644,40 @@ class ChatController extends BaseController {
     if (userId == null) return;
 
     // Call backend API
+    // API returns: { "message": string, "thread_id": string }
     final response = await _chatApiService.sendMessageToAI(
       userId: userId!,
       message: message,
-      chatSessionId: 'session_001', // Hardcoded for testing
+      // chatSessionId is optional - API manages conversation history automatically
     );
 
-    // Check if API call was successful
-    if (response['success'] != true) {
-      throw Exception(response['error'] ?? 'Failed to get response from server');
-    }
-
     // Extract response data
-    // The API returns data in multiple possible formats:
-    // 1. Direct message field: {success: true, message: "...", ...}
-    // 2. Data message field: {success: true, data: {message: "...", ...}}
-    // 3. History array: {success: true, data: {history: [{content: "...", role: "assistant"}, ...]}}
+    // New API format: { "message": string, "thread_id": string }
+    // Also supports legacy formats for backward compatibility
     String aiResponseText = '';
+    String? threadId;
     
     if (kDebugMode) {
       print('🔍 Parsing API response...');
-      print('  - response[\'data\']: ${response['data']}');
-      print('  - response[\'data\'][\'message\']: ${response['data']?['message']}');
       print('  - response[\'message\']: ${response['message']}');
+      print('  - response[\'thread_id\']: ${response['thread_id']}');
+      print('  - response[\'data\']: ${response['data']}');
     }
     
-    // Try data.message field first (most common for first message)
-    if (response['data'] != null) {
+    // New API format: direct message field
+    if (response['message'] != null) {
+      aiResponseText = response['message'].toString();
+      threadId = response['thread_id']?.toString();
+      if (kDebugMode) {
+        print('✅ Found message in response[\'message\']: ${aiResponseText.substring(0, aiResponseText.length > 50 ? 50 : aiResponseText.length)}...');
+        if (threadId != null) {
+          print('✅ Thread ID: $threadId');
+        }
+      }
+    }
+    
+    // Fallback: Try data.message field (legacy format)
+    if (aiResponseText.isEmpty && response['data'] != null) {
       final data = response['data'] as Map<String, dynamic>?;
       if (data != null && data['message'] != null) {
         aiResponseText = data['message'].toString();
@@ -588,15 +687,7 @@ class ChatController extends BaseController {
       }
     }
     
-    // If still empty, try direct message field
-    if (aiResponseText.isEmpty && response['message'] != null) {
-      aiResponseText = response['message'].toString();
-      if (kDebugMode) {
-        print('✅ Found message in response[\'message\']: ${aiResponseText.substring(0, aiResponseText.length > 50 ? 50 : aiResponseText.length)}...');
-      }
-    }
-    
-    // If still empty, try extracting from history array
+    // Fallback: Try extracting from history array (legacy format)
     if (aiResponseText.isEmpty && response['data'] != null) {
       final data = response['data'] as Map<String, dynamic>?;
       if (data != null && data['history'] != null) {
@@ -619,10 +710,10 @@ class ChatController extends BaseController {
     
     if (kDebugMode) {
       print('✅ API Response received:');
-      print('  - Success: ${response['success']}');
       print('  - AI Message: ${aiResponseText.isNotEmpty ? aiResponseText.substring(0, aiResponseText.length > 50 ? 50 : aiResponseText.length) : "EMPTY"}...');
-      print('  - User Message ID: ${response['user_message_id']}');
-      print('  - AI Message ID: ${response['ai_message_id']}');
+      if (threadId != null) {
+        print('  - Thread ID: $threadId');
+      }
     }
     
     if (aiResponseText.isEmpty) {
@@ -806,6 +897,27 @@ class ChatController extends BaseController {
     return date1.year == date2.year &&
         date1.month == date2.month &&
         date1.day == date2.day;
+  }
+
+  /// Create a key for tracking pending messages
+  /// Format: "content|type|timestamp_rounded_to_seconds"
+  String _createPendingMessageKey(String content, String type, DateTime timestamp) {
+    // Round timestamp to seconds to allow matching within a time window
+    final roundedTimestamp = DateTime(
+      timestamp.year,
+      timestamp.month,
+      timestamp.day,
+      timestamp.hour,
+      timestamp.minute,
+      timestamp.second,
+    );
+    return '$content|$type|${roundedTimestamp.toIso8601String()}';
+  }
+
+  /// Create a key for message deduplication
+  /// Format: "content|type|timestamp"
+  String _createMessageKey(String content, String type, DateTime timestamp) {
+    return '$content|$type|${timestamp.toIso8601String()}';
   }
 
   /// Update visible date with context (for more accurate calculation)

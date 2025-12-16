@@ -16,6 +16,9 @@ class ApiConstants {
   // Payment Intent Endpoint: /api/create-payment-intent
   // Full URL: https://ammora.onrender.com/api/create-payment-intent
   static const String endpointCreatePaymentIntent = '/api/create-payment-intent';
+  // Update Context Endpoint: /api/update-context
+  // Full URL: https://ammora.onrender.com/api/update-context
+  static const String endpointUpdateContext = '/api/update-context';
 
   // Headers
   static const String headerContentType = 'Content-Type';

@@ -156,8 +156,9 @@ class StripeService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         
-        // Validate response structure
-        if (data['success'] == true && data['clientSecret'] != null) {
+        // Validate response structure - API returns { "clientSecret": string }
+        // Handle both formats: with/without success flag
+        if (data['clientSecret'] != null) {
           final clientSecret = data['clientSecret'] as String;
           final publishableKey = data['publishableKey'] as String?;
           
@@ -171,7 +172,7 @@ class StripeService {
             if (publishableKey != null) 'publishableKey': publishableKey,
           };
         } else {
-          throw Exception('Invalid response format: missing clientSecret or success flag');
+          throw Exception('Invalid response format: missing clientSecret');
         }
       } else {
         // Try to parse error message from response
