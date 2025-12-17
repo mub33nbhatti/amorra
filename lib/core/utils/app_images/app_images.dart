@@ -14,7 +14,7 @@ class AppImages {
   static const String googleLogo = 'assets/images/logo/google_logo.png';
 
   //chatbot logo
-  static const String chatbotLogo = 'assets/images/logo/chatbot_logo.png';
+  static const String chatbotLogo = 'assets/images/logo/chatbot_logo.jpeg';
 
   //onboarding images
   static const String onboarding1 = 'assets/images/onboarding/onboarding_1.png';

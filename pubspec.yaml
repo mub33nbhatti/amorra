@@ -73,6 +73,7 @@ dependencies:
 
   # Image Handling (if needed)
   cached_network_image: ^3.4.1
+  image_picker: ^1.1.2
 
   # Lottie Animations
   lottie: ^3.1.2

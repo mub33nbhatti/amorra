@@ -14,6 +14,7 @@ class UserModel extends BaseModel {
   final bool isAgeVerified;
   final bool isOnboardingCompleted;
   final bool isBlocked;
+  final String? profileImageUrl;
 
   UserModel({
     required this.id,
@@ -27,6 +28,7 @@ class UserModel extends BaseModel {
     this.isAgeVerified = false,
     this.isOnboardingCompleted = false,
     this.isBlocked = false,
+    this.profileImageUrl,
   });
 
   /// Create UserModel from Firestore document
@@ -43,6 +45,7 @@ class UserModel extends BaseModel {
       isAgeVerified: json['isAgeVerified'] ?? false,
       isOnboardingCompleted: json['isOnboardingCompleted'] ?? false,
       isBlocked: json['isBlocked'] ?? false,
+      profileImageUrl: json['profileImageUrl'],
       // Note: preferences are stored in a subcollection, not in the user document
     );
   }
@@ -62,6 +65,7 @@ class UserModel extends BaseModel {
       'isAgeVerified': isAgeVerified,
       'isOnboardingCompleted': isOnboardingCompleted,
       'isBlocked': isBlocked,
+      'profileImageUrl': profileImageUrl,
       // Note: preferences are stored in a subcollection, not in the user document
     };
   }
@@ -79,6 +83,7 @@ class UserModel extends BaseModel {
     bool? isAgeVerified,
     bool? isOnboardingCompleted,
     bool? isBlocked,
+    String? profileImageUrl,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -93,6 +98,7 @@ class UserModel extends BaseModel {
       isOnboardingCompleted:
           isOnboardingCompleted ?? this.isOnboardingCompleted,
       isBlocked: isBlocked ?? this.isBlocked,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
 

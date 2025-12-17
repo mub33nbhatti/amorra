@@ -13,13 +13,18 @@ import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
 import 'package:amorra/presentation/controllers/subscription/subscription_controller.dart';
 import 'package:amorra/presentation/controllers/main/main_navigation_controller.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:amorra/presentation//widgets/common/app_alert_dialog.dart';
 import 'package:amorra/presentation//widgets/common/app_password_dialog.dart';
+import 'package:amorra/data/services/storage_service.dart';
 
 /// Profile Controller
 /// Handles profile screen logic and state
 class ProfileController extends BaseController {
   final AuthRepository _authRepository = AuthRepository();
+  final StorageService _storageService = StorageService();
+  final ImagePicker _imagePicker = ImagePicker();
 
   // State
   final Rx<UserModel?> user = Rx<UserModel?>(null);
@@ -29,6 +34,10 @@ class ProfileController extends BaseController {
   final TextEditingController nameController = TextEditingController();
   final RxBool isLogoutLoading = false.obs;
   final RxBool isDeleteAccountLoading = false.obs;
+  
+  // Image upload state
+  final RxBool isUploadingImage = false.obs;
+  final RxInt currentImageIndex = 0.obs; // 0 = avatar, 1 = profile image
 
   // Get AuthController
   AuthController? get _authController {
@@ -81,8 +90,11 @@ class ProfileController extends BaseController {
           user.value = updatedUser;
           editedName.value = updatedUser.name;
           nameController.text = updatedUser.name;
+          // Update image index based on profile image availability
+          currentImageIndex.value = initialImageIndex;
         } else {
           user.value = null;
+          currentImageIndex.value = 0;
         }
       });
 
@@ -91,6 +103,8 @@ class ProfileController extends BaseController {
         user.value = authController.currentUser.value;
         editedName.value = authController.currentUser.value!.name;
         nameController.text = authController.currentUser.value!.name;
+        // Set initial image index
+        currentImageIndex.value = initialImageIndex;
       }
     } catch (e) {
       if (kDebugMode) {
@@ -117,6 +131,8 @@ class ProfileController extends BaseController {
         user.value = currentUser;
         editedName.value = currentUser.name;
         nameController.text = currentUser.name;
+        // Set initial image index
+        currentImageIndex.value = initialImageIndex;
       } else {
         // Try to fetch from repository
         final fetchedUser = await _authRepository.getCurrentUser();
@@ -125,6 +141,8 @@ class ProfileController extends BaseController {
           authController.currentUser.value = fetchedUser;
           editedName.value = fetchedUser.name;
           nameController.text = fetchedUser.name;
+          // Set initial image index
+          currentImageIndex.value = initialImageIndex;
         }
       }
     } catch (e) {
@@ -439,6 +457,153 @@ class ProfileController extends BaseController {
       }
       // Fallback: try to navigate using route
       Get.toNamed(AppRoutes.subscription);
+    }
+  }
+
+  /// Get profile image URL
+  String? get profileImageUrl => user.value?.profileImageUrl;
+
+  /// Check if user has profile image
+  bool get hasProfileImage => profileImageUrl != null && profileImageUrl!.isNotEmpty;
+
+  /// Get current image index (0 = avatar, 1 = profile image)
+  /// Defaults to profile image if available, otherwise avatar
+  int get initialImageIndex {
+    if (hasProfileImage) {
+      return 1; // Start with profile image if available
+    }
+    return 0; // Start with avatar if no profile image
+  }
+
+  /// Handle swipe to change image
+  void onImageSwipe(int index) {
+    currentImageIndex.value = index;
+  }
+
+  /// Pick and upload profile image
+  Future<void> uploadProfileImage() async {
+    if (user.value == null) return;
+
+    try {
+      // Pick image from gallery
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
+
+      if (pickedFile == null) {
+        // User cancelled
+        return;
+      }
+
+      final imageFile = File(pickedFile.path);
+      if (!imageFile.existsSync()) {
+        showError('Error', subtitle: 'Selected image file not found.');
+        return;
+      }
+
+      // Start upload
+      isUploadingImage.value = true;
+
+      // Upload to Firebase Storage
+      final downloadUrl = await _storageService.uploadProfileImage(
+        imageFile,
+        user.value!.id,
+      );
+
+      // Update user document with profile image URL
+      final updatedUser = user.value!.copyWith(
+        profileImageUrl: downloadUrl,
+        updatedAt: DateTime.now(),
+      );
+
+      final authController = _authController;
+      if (authController == null) {
+        throw Exception('AuthController not available');
+      }
+
+      await authController.updateUser(updatedUser);
+
+      // Switch to profile image view after upload
+      currentImageIndex.value = 1;
+
+      showSuccess(
+        'Image Uploaded',
+        subtitle: 'Your profile image has been updated successfully.',
+      );
+    } catch (e) {
+      setError(e.toString());
+      if (kDebugMode) {
+        print('Error uploading profile image: $e');
+      }
+      showError(
+        'Upload Failed',
+        subtitle: 'Failed to upload image. Please try again.',
+      );
+    } finally {
+      isUploadingImage.value = false;
+    }
+  }
+
+  /// Delete profile image
+  Future<void> deleteProfileImage() async {
+    if (user.value == null || !hasProfileImage) return;
+
+    // Show confirmation dialog
+    final confirmed = await Get.dialog<bool>(
+      AppAlertDialog(
+        title: 'Delete Profile Image',
+        subtitle: 'Are you sure you want to delete your profile image?',
+        primaryButtonText: 'Delete',
+        secondaryButtonText: 'Cancel',
+        onPrimaryPressed: () => Get.back(result: true),
+        onSecondaryPressed: () => Get.back(result: false),
+        primaryButtonColor: AppColors.error,
+        primaryButtonTextColor: AppColors.white,
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      isUploadingImage.value = true;
+
+      // Delete from Firebase Storage
+      await _storageService.deleteProfileImage(user.value!.id);
+
+      // Update user document to remove profile image URL
+      final updatedUser = user.value!.copyWith(
+        profileImageUrl: null,
+        updatedAt: DateTime.now(),
+      );
+
+      final authController = _authController;
+      if (authController == null) {
+        throw Exception('AuthController not available');
+      }
+
+      await authController.updateUser(updatedUser);
+
+      // Switch back to avatar view
+      currentImageIndex.value = 0;
+
+      showSuccess(
+        'Image Deleted',
+        subtitle: 'Your profile image has been deleted successfully.',
+      );
+    } catch (e) {
+      setError(e.toString());
+      if (kDebugMode) {
+        print('Error deleting profile image: $e');
+      }
+      showError(
+        'Delete Failed',
+        subtitle: 'Failed to delete image. Please try again.',
+      );
+    } finally {
+      isUploadingImage.value = false;
     }
   }
 }

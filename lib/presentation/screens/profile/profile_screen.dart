@@ -76,11 +76,16 @@ class ProfileScreen extends GetView<ProfileController> {
                         Obx(() => ProfileHeaderCard(
                               userName: controller.userName,
                               userAge: controller.userAge,
+                              profileImageUrl: controller.profileImageUrl,
                               isEditingName: controller.isEditingName.value,
+                              isUploadingImage: controller.isUploadingImage.value,
+                              currentImageIndex: controller.currentImageIndex.value,
                               nameController: controller.nameController,
                               onEditTap: controller.startEditingName,
                               onSave: controller.saveName,
                               onCancel: controller.cancelEditingName,
+                              onUploadImage: controller.uploadProfileImage,
+                              onImageSwipe: controller.onImageSwipe,
                             )),
                         AppSpacing.vertical(context, 0.02),
 
