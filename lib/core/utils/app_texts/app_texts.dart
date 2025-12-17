@@ -72,7 +72,8 @@ class AppTexts {
   static const String profileReauthenticateConfirm = "Confirm";
   static const String profileAgeNotSet = "Not set";
   static const String profileNameUpdatedMessage = "Name updated successfully!";
-  static const String profilePreferencesUpdatedMessage = "Preferences updated successfully!";
+  static const String profilePreferencesUpdatedMessage =
+      "Preferences updated successfully!";
 
   // Onboarding Screens
   static const String onboardingLottieAnimationMessage = "You are all set!";
@@ -116,7 +117,8 @@ class AppTexts {
   static const String homeGreetingMorning = "Good Morning";
   static const String homeGreetingAfternoon = "Good Afternoon";
   static const String homeGreetingEvening = "Good Evening";
-  static const String homeIntroText = "Amorra is here to listen and support you";
+  static const String homeIntroText =
+      "Amorra is here to listen and support you";
   static const String chatCtaStartTitle = "Start your first conversation";
   static const String chatCtaStartSubtitle =
       "Begin your journey with Amorra and discover meaningful connections.";
@@ -143,7 +145,8 @@ class AppTexts {
   static const String suggestion2Title = "Express Your Feelings";
   static const String suggestion2Description =
       "Open up about what's on your mind and heart.";
-  static const String suggestion2StarterMessage = "Amorra, I've been feeling...";
+  static const String suggestion2StarterMessage =
+      "Amorra, I've been feeling...";
 
   static const String suggestion3Title = "Seek Comfort";
   static const String suggestion3Description =
@@ -165,7 +168,8 @@ class AppTexts {
   // Subscription Usage Card
   static const String subscriptionFreePlanLabel = "Free plan";
   static const String subscriptionPremiumPlanLabel = "Premium plan active";
-  static const String subscriptionFreeTrialActive = "Free trial active - Unlimited messages";
+  static const String subscriptionFreeTrialActive =
+      "Free trial active - Unlimited messages";
   static const String subscriptionMessagesLeft =
       "You have {count} messages left today";
   static const String subscriptionUnlimitedText =
@@ -249,20 +253,34 @@ class AppTexts {
   static const String profileSetupOptional = "(Optional)";
 
   // Profile Setup Validation Errors
-  static const String profileSetupErrorTone = "Please select your preferred conversation tone";
-  static const String profileSetupErrorTopicsToAvoid = "Please select a topic to avoid";
-  static const String profileSetupErrorRelationshipStatus = "Please select your relationship status";
-  static const String profileSetupErrorSupportType = "Please select the type of support you are looking for";
-  static const String profileSetupErrorSexualOrientation = "Please select your sexual orientation";
-  static const String profileSetupErrorInterestedIn = "Please select who you are interested in";
-  static const String profileSetupErrorDailyRoutine = "Please select your daily routine";
-  static const String profileSetupErrorAiCommunication = "Please select your preferred communication style";
-  static const String profileSetupErrorBiggestChallenge = "Please select your biggest challenge";
-  static const String profileSetupErrorTimeDedication = "Please select how much time you can dedicate";
-  static const String profileSetupErrorAiToolsFamiliarity = "Please select your familiarity with AI tools";
-  static const String profileSetupErrorStressResponse = "Please select how you respond to stress";
-  static const String profileSetupErrorAiHonesty = "Please select how honest you want the AI to be";
-  static const String profileSetupFixErrorsMessage = "Fix above errors to continue";
+  static const String profileSetupErrorTone =
+      "Please select your preferred conversation tone";
+  static const String profileSetupErrorTopicsToAvoid =
+      "Please select a topic to avoid";
+  static const String profileSetupErrorRelationshipStatus =
+      "Please select your relationship status";
+  static const String profileSetupErrorSupportType =
+      "Please select the type of support you are looking for";
+  static const String profileSetupErrorSexualOrientation =
+      "Please select your sexual orientation";
+  static const String profileSetupErrorInterestedIn =
+      "Please select who you are interested in";
+  static const String profileSetupErrorDailyRoutine =
+      "Please select your daily routine";
+  static const String profileSetupErrorAiCommunication =
+      "Please select your preferred communication style";
+  static const String profileSetupErrorBiggestChallenge =
+      "Please select your biggest challenge";
+  static const String profileSetupErrorTimeDedication =
+      "Please select how much time you can dedicate";
+  static const String profileSetupErrorAiToolsFamiliarity =
+      "Please select your familiarity with AI tools";
+  static const String profileSetupErrorStressResponse =
+      "Please select how you respond to stress";
+  static const String profileSetupErrorAiHonesty =
+      "Please select how honest you want the AI to be";
+  static const String profileSetupFixErrorsMessage =
+      "Fix above errors to continue";
 
   // New Profile Setup Questions
   // Sexual Orientation
@@ -365,8 +383,17 @@ class AppTexts {
   static const String chatMessagesRemaining =
       "{count} messages remaining today";
   static const String chatUnlimitedMessages = "Unlimited messages";
-  static const String chatFreeTrialActive = "You're on a free trial - Unlimited messages!";
+  static const String chatFreeTrialActive =
+      "You're on a free trial - Unlimited messages!";
   static const String chatTypingIndicator = "Amorra is typing...";
   static const String chatErrorSending = "Failed to send message";
   static const String chatErrorLoading = "Failed to load messages";
+
+  // Chat Processing Messages (shown while AI is responding)
+  static const String chatProcessingThinking = "Thinking...";
+  static const String chatProcessingCrafting = "Crafting a response...";
+  static const String chatProcessingAlmostThere = "Almost there...";
+  static const String chatProcessingProcessing = "Processing your message...";
+  static const String chatProcessingPreparing =
+      "Preparing something special...";
 }

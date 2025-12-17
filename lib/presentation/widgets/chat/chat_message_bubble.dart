@@ -1,3 +1,4 @@
+import 'package:amorra/presentation/widgets/chat/chat_processing_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:amorra/core/utils/app_colors/app_colors.dart';
@@ -46,9 +47,7 @@ class ChatMessageBubble extends StatelessWidget {
       children: [
         // Avatar (only for AI, on the left)
         if (!isUser) ...[
-          AIAvatar(
-            size: avatarSize,
-          ),
+          AIAvatar(size: avatarSize),
           AppSpacing.horizontal(context, 0.015),
         ],
 
@@ -143,6 +142,14 @@ class ChatMessageBubble extends StatelessWidget {
                         : 0,
                   ),
                   child: ChatTimestampWidget(timestamp: timestamp),
+                ),
+              if (isTyping)
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: AppResponsive.screenHeight(context) * 0.002,
+                    left: AppResponsive.screenWidth(context) * 0.002,
+                  ),
+                  child: const ChatProcessingMessages(),
                 ),
             ],
           ),

@@ -9,16 +9,18 @@ class ChatRepository {
   final FirebaseService _firebaseService = FirebaseService();
 
   /// Get messages stream for a user
-  /// Queries messages collection filtered by userId (root level field)
+  /// Reads from messages/{userId}/history subcollection (backend path)
   Stream<List<ChatMessageModel>> getMessagesStream(String userId) {
     try {
       if (kDebugMode) {
         print('📡 Setting up Firestore stream for userId: $userId');
+        print('📡 Reading from: messages/$userId/history');
       }
       
       return _firebaseService
           .collection(AppConstants.collectionMessages)
-          .where('userId', isEqualTo: userId)
+          .doc(userId)
+          .collection('history') // Backend uses 'history' subcollection
           .orderBy('timestamp', descending: true)
           .snapshots()
           .map((snapshot) {
@@ -75,7 +77,7 @@ class ChatRepository {
   }
 
   /// Get recent messages for context (last N messages)
-  /// Queries messages collection filtered by metadata.userId
+  /// Reads from messages/{userId}/history subcollection (backend path)
   Future<List<ChatMessageModel>> getRecentMessages(
     String userId,
     int limit,
@@ -83,11 +85,13 @@ class ChatRepository {
     try {
       if (kDebugMode) {
         print('🔍 Querying Firestore for messages with userId: $userId');
+        print('🔍 Reading from: messages/$userId/history');
       }
       
       final snapshot = await _firebaseService
           .collection(AppConstants.collectionMessages)
-          .where('userId', isEqualTo: userId)
+          .doc(userId)
+          .collection('history') // Backend uses 'history' subcollection
           .orderBy('timestamp', descending: true)
           .limit(limit)
           .get();
@@ -97,8 +101,8 @@ class ChatRepository {
         if (snapshot.docs.isEmpty) {
           print('⚠️ Query returned 0 documents. Possible issues:');
           print('  1. Firestore security rules might be blocking the query');
-          print('  2. Index might not be created correctly');
-          print('  3. Field path might be incorrect');
+          print('  2. No messages exist for this user yet');
+          print('  3. Path might be incorrect: messages/$userId/history');
         }
       }
 
@@ -138,24 +142,19 @@ class ChatRepository {
     } catch (e) {
       if (kDebugMode) {
         print('❌ Get recent messages error: $e');
-        // Check if it's an index error
-        if (e.toString().contains('index') || e.toString().contains('Index')) {
-          print('⚠️ Firestore index required! Create a composite index for:');
-          print('  Collection: messages');
-          print('  Fields: metadata.userId (Ascending), metadata.timestamp (Descending)');
-        }
       }
       rethrow;
     }
   }
 
   /// Delete all messages for a user (if needed)
+  /// Deletes from messages/{userId}/history subcollection (backend path)
   Future<void> deleteAllMessages(String userId) async {
     try {
       final messagesRef = _firebaseService
           .collection(AppConstants.collectionMessages)
           .doc(userId)
-          .collection('chats');
+          .collection('history'); // Backend uses 'history' subcollection
 
       final snapshot = await messagesRef.get();
       final batch = _firebaseService.firestore.batch();
@@ -174,11 +173,13 @@ class ChatRepository {
   }
 
   /// Check if user has active chat (any messages exist)
+  /// Reads from messages/{userId}/history subcollection (backend path)
   Future<bool> hasActiveChat(String userId) async {
     try {
       final snapshot = await _firebaseService
           .collection(AppConstants.collectionMessages)
-          .where('userId', isEqualTo: userId)
+          .doc(userId)
+          .collection('history') // Backend uses 'history' subcollection
           .limit(1)
           .get();
       return snapshot.docs.isNotEmpty;
@@ -191,11 +192,13 @@ class ChatRepository {
   }
 
   /// Get last message for a user
+  /// Reads from messages/{userId}/history subcollection (backend path)
   Future<ChatMessageModel?> getLastMessage(String userId) async {
     try {
       final snapshot = await _firebaseService
           .collection(AppConstants.collectionMessages)
-          .where('userId', isEqualTo: userId)
+          .doc(userId)
+          .collection('history') // Backend uses 'history' subcollection
           .orderBy('timestamp', descending: true)
           .limit(1)
           .get();

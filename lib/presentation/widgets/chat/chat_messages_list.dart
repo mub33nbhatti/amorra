@@ -5,6 +5,7 @@ import 'package:amorra/core/utils/app_spacing/app_spacing.dart';
 import 'package:amorra/presentation/controllers/chat/chat_controller.dart';
 import 'package:amorra/presentation/widgets/chat/chat_message_bubble.dart';
 import 'package:amorra/presentation/widgets/chat/chat_empty_state.dart';
+import 'package:amorra/presentation/widgets/chat/chat_processing_messages.dart';
 import 'package:amorra/presentation/widgets/common/app_loading_indicator.dart';
 import 'package:amorra/core/constants/app_constants.dart';
 
@@ -48,14 +49,19 @@ class ChatMessagesList extends StatelessWidget {
             // Actual messages
             ..._buildMessages(context),
 
-            // Typing indicator as message bubble
+            // Typing indicator as message bubble with processing messages
             if (controller.isTyping.value)
-              ChatMessageBubble(
-                message: '', // Not used when isTyping is true
-                type: AppConstants.messageTypeAI,
-                timestamp: DateTime.now(),
-                showTimestamp: false, // Don't show timestamp for typing
-                isTyping: true,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ChatMessageBubble(
+                    message: '', // Not used when isTyping is true
+                    type: AppConstants.messageTypeAI,
+                    timestamp: DateTime.now(),
+                    showTimestamp: false, // Don't show timestamp for typing
+                    isTyping: true,
+                  ),
+                ],
               ),
 
             // Empty state at the bottom

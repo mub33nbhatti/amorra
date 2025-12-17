@@ -65,7 +65,7 @@ class ChatApiService {
               headers: headers,
               body: jsonEncode(requestBody),
             )
-            .timeout(ApiConstants.connectTimeout);
+            .timeout(ApiConstants.chatApiTimeout); // Use longer timeout for AI responses
 
         if (response.statusCode == 200) {
           final responseData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -131,14 +131,40 @@ class ChatApiService {
       } catch (e) {
         lastException = e is Exception ? e : Exception(e.toString());
         
-        // Don't retry on timeout or network errors if it's the last attempt
+        // Don't retry on timeout - AI responses legitimately take time
+        // Only retry on actual network/server errors
+        final isTimeout = e.toString().toLowerCase().contains('timeout');
+        final isNetworkError = e.toString().toLowerCase().contains('socket') ||
+                               e.toString().toLowerCase().contains('connection') ||
+                               e.toString().toLowerCase().contains('network');
+        
+        if (isTimeout) {
+          // Timeout is expected for AI responses - don't retry, just throw
+          if (kDebugMode) {
+            print('⏱️ Chat API timeout (this is normal for AI responses): $e');
+          }
+          rethrow;
+        }
+        
+        // Don't retry if it's the last attempt
         if (attempt >= AppConfig.maxRetryAttempts - 1) {
           rethrow;
         }
         
-        // Wait before retrying with exponential backoff
-        await Future.delayed(AppConfig.retryDelay * (attempt + 1));
-        attempt++;
+        // Only retry on network/server errors (not timeouts)
+        if (isNetworkError || (lastException.toString().contains('500') || 
+                               lastException.toString().contains('502') ||
+                               lastException.toString().contains('503'))) {
+          if (kDebugMode) {
+            print('🔄 Retrying chat API call due to network/server error (attempt ${attempt + 1}/${AppConfig.maxRetryAttempts})');
+          }
+          // Wait before retrying with exponential backoff
+          await Future.delayed(AppConfig.retryDelay * (attempt + 1));
+          attempt++;
+        } else {
+          // Other errors (4xx client errors, etc.) - don't retry
+          rethrow;
+        }
       }
     }
 

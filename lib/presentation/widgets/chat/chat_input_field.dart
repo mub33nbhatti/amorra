@@ -66,38 +66,40 @@ class _ChatInputFieldState extends State<ChatInputField> {
         top: false,
         child: Row(
           children: [
-            // Text Field
+            // Text Field with height constraints
             Expanded(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: AppResponsive.screenHeight(context) * 0.2, // Max 20% of screen height
+                  minHeight: AppResponsive.screenHeight(context) * 0.05, // Min height for single line
                 ),
-                child: TextField(
-                  controller: widget.controller,
-                  focusNode: widget.focusNode,
-                  maxLines: null,
-                  minLines: 1,
-                  textCapitalization: TextCapitalization.sentences,
-                  textInputAction: TextInputAction.newline,
-                  keyboardType: TextInputType.multiline,
-                  scrollController: ScrollController(),
-                  scrollPhysics: const ClampingScrollPhysics(),
-                  style: AppTextStyles.bodyText(
-                    context,
-                  ).copyWith(color: AppColors.black),
-                  decoration: InputDecoration(
-                    hintText: widget.hintText ?? AppTexts.chatInputHint,
-                    hintStyle: AppTextStyles.hintText(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: TextField(
+                    controller: widget.controller,
+                    focusNode: widget.focusNode,
+                    maxLines: null,
+                    minLines: 1,
+                    textCapitalization: TextCapitalization.sentences, // Capitalize first letter of sentences
+                    textInputAction: TextInputAction.newline, // Allow newline from keyboard
+                    keyboardType: TextInputType.multiline, // Enable multi-line keyboard
+                    style: AppTextStyles.bodyText(
                       context,
-                    ).copyWith(color: AppColors.grey),
-                    contentPadding: AppSpacing.symmetric(
-                      context,
-                      h: 0.04,
-                      v: 0.01,
+                    ).copyWith(color: AppColors.black),
+                    decoration: InputDecoration(
+                      hintText: widget.hintText ?? AppTexts.chatInputHint,
+                      hintStyle: AppTextStyles.hintText(
+                        context,
+                      ).copyWith(color: AppColors.grey),
+                      contentPadding: AppSpacing.symmetric(
+                        context,
+                        h: 0.04,
+                        v: 0.01,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
                     ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
                   ),
                 ),
               ),

@@ -31,6 +31,9 @@ class ApiConstants {
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);
   static const Duration sendTimeout = Duration(seconds: 30);
+  
+  // Chat API Timeout - AI responses can take longer, so we use a longer timeout
+  static const Duration chatApiTimeout = Duration(seconds: 300); // 5 minutes for AI responses (backend can take 3-4 minutes)
 
   // Retry Configuration
   static const int maxRetries = 3;

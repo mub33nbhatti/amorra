@@ -45,12 +45,17 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     
-    // Nested structure: messages/{userId}/chats/{messageId}
+    // Nested structure: messages/{userId}/history/{messageId} (backend path)
     match /messages/{userId} {
       // Allow access to user's message document if they own it
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
       
-      // Allow access to chat messages subcollection
+      // Allow access to history subcollection (backend uses this)
+      match /history/{messageId} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+      
+      // Legacy: Allow access to chats subcollection (for backward compatibility)
       match /chats/{messageId} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
