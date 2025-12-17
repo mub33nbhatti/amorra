@@ -22,16 +22,20 @@ class ChatMessageModel extends BaseModel {
   });
 
   /// Create ChatMessageModel from Firestore document
-  /// Fields are at root level: text, timestamp, type, userId, id, chatSessionId, isTyping
+  /// Backend fields: user_id (snake_case), message, type, timestamp, is_typing, metadata, chat_session_id, id
+  /// Supports both backend format (snake_case) and frontend format (camelCase) for backward compatibility
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
     return ChatMessageModel(
       id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      message: json['text'] ?? '', // 'text' field contains the message content
+      // Handle both user_id (backend) and userId (frontend) for backward compatibility
+      userId: json['user_id'] ?? json['userId'] ?? '',
+      // Backend uses 'message', frontend legacy uses 'text'
+      message: json['message'] ?? json['text'] ?? '',
       type: json['type'] ?? 'user',
       timestamp: _parseTimestamp(json['timestamp']),
-      isTyping: json['isTyping'] as bool? ?? false,
-      metadata: json['metadata'], // Keep for backward compatibility, but not used
+      // Handle both is_typing (backend) and isTyping (frontend) for backward compatibility
+      isTyping: (json['is_typing'] as bool?) ?? (json['isTyping'] as bool?) ?? false,
+      metadata: json['metadata'],
     );
   }
   

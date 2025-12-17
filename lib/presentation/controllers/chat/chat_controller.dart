@@ -34,6 +34,15 @@ class ChatController extends BaseController {
   
   // Pending starter message to send when chat screen becomes active
   String? _pendingStarterMessage;
+  
+  // Track API message IDs to prevent duplicates when Firestore stream updates
+  final Set<String> _apiMessageIds = <String>{};
+  
+  // Track pending API requests to prevent duplicate messages
+  final Set<String> _pendingMessageTexts = <String>{};
+  
+  // Current API request (for cancellation)
+  Future<void>? _currentApiRequest;
 
   // Scroll controller for messages list (managed by controller for better control)
   final ScrollController scrollController = ScrollController();
@@ -265,6 +274,9 @@ class ChatController extends BaseController {
   void _cancelMessagesStream() {
     _messagesSubscription?.cancel();
     _messagesSubscription = null;
+    _apiMessageIds.clear(); // Clear tracked API message IDs
+    _pendingMessageTexts.clear(); // Clear pending messages
+    _currentApiRequest = null; // Clear current request
     if (kDebugMode) {
       print('🛑 Cancelled messages stream subscription');
     }
@@ -289,8 +301,8 @@ class ChatController extends BaseController {
     }
 
     _messagesSubscription = _chatService.getMessagesStream(userId!).listen((newMessages) {
-      // Merge Firestore messages with local temp messages
-      // Replace local temp messages with Firestore versions to prevent duplicates
+      // Merge Firestore messages with local API messages intelligently
+      // Firestore is the source of truth, but we merge to avoid duplicates
       if (kDebugMode) {
         print('📡 Firestore stream update: ${newMessages.length} messages');
       }
@@ -298,32 +310,79 @@ class ChatController extends BaseController {
       // Get Firestore message IDs
       final firestoreIds = newMessages.map((m) => m.id).toSet();
       
-      // Find local temp messages (messages not in Firestore yet)
-      // Temp messages are recent (within last 10 seconds) and not in Firestore
+      // Find local temp messages that were added from API but not yet confirmed by Firestore
+      // These are messages that:
+      // 1. Have temp IDs (not yet confirmed by Firestore)
+      // 2. Are recent (within last 30 seconds)
+      // 3. Don't have a matching Firestore message by content+timestamp
       final now = DateTime.now();
       final localTempMessages = messages.where((localMsg) {
-        final isRecent = now.difference(localMsg.timestamp).inSeconds < 10;
+        final isRecent = now.difference(localMsg.timestamp).inSeconds < 30;
+        final isTemp = localMsg.id.startsWith('temp_');
         final notInFirestore = !firestoreIds.contains(localMsg.id);
-        return isRecent && notInFirestore;
+        return isRecent && isTemp && notInFirestore;
       }).toList();
       
       // Start with Firestore messages (source of truth)
       final mergedMessages = List<ChatMessageModel>.from(newMessages);
       
       // Add local temp messages that aren't in Firestore yet
-      // These will be replaced when Firestore updates
-      for (var tempMsg in localTempMessages) {
-        // Check if Firestore has a message with same content (might have different ID)
+      // These will be replaced when Firestore confirms them
+      for (var localMsg in localTempMessages) {
+        // Check if Firestore has a matching message by:
+        // 1. Same ID (if temp was replaced with real ID)
+        // 2. Same content + type + similar timestamp (within 10 seconds)
+        final hasMatchingId = firestoreIds.contains(localMsg.id);
         final hasMatchingContent = newMessages.any((fsMsg) => 
-          fsMsg.message == tempMsg.message && 
-          fsMsg.type == tempMsg.type &&
-          (fsMsg.timestamp.difference(tempMsg.timestamp).inSeconds.abs() < 5)
+          fsMsg.message == localMsg.message && 
+          fsMsg.type == localMsg.type &&
+          (fsMsg.timestamp.difference(localMsg.timestamp).inSeconds.abs() < 10)
         );
         
-        if (!hasMatchingContent) {
-          // No matching content in Firestore yet, keep temp message
-          mergedMessages.add(tempMsg);
+        if (!hasMatchingId && !hasMatchingContent) {
+          // No matching message in Firestore yet, keep temp message
+          mergedMessages.add(localMsg);
         }
+        // If there's a match (by ID or content), the temp message will be replaced by the Firestore one
+      }
+      
+      // Remove duplicates from merged messages (same content + type + similar timestamp)
+      // This handles cases where both temp and Firestore versions exist
+      final deduplicatedMessages = <ChatMessageModel>[];
+      for (var msg in mergedMessages) {
+        // Check if we already have a message with same content, type, and similar timestamp
+        final duplicateIndex = deduplicatedMessages.indexWhere((existingMsg) =>
+          existingMsg.message == msg.message &&
+          existingMsg.type == msg.type &&
+          (existingMsg.timestamp.difference(msg.timestamp).inSeconds.abs() < 10)
+        );
+        
+        if (duplicateIndex == -1) {
+          // No duplicate, add it
+          deduplicatedMessages.add(msg);
+        } else {
+          // Duplicate found - prefer the one with real ID (not temp) and more recent
+          final existingMsg = deduplicatedMessages[duplicateIndex];
+          final shouldReplace = 
+            // Prefer non-temp IDs
+            (!msg.id.startsWith('temp_') && existingMsg.id.startsWith('temp_')) ||
+            // If both are temp or both are real, prefer the one with later timestamp
+            (msg.id.startsWith('temp_') == existingMsg.id.startsWith('temp_') &&
+             msg.timestamp.isAfter(existingMsg.timestamp));
+          
+          if (shouldReplace) {
+            deduplicatedMessages[duplicateIndex] = msg;
+          }
+        }
+      }
+      
+      // Use deduplicated messages
+      mergedMessages.clear();
+      mergedMessages.addAll(deduplicatedMessages);
+      
+      // Clean up API tracking for messages that are now confirmed in Firestore
+      for (var fsMsg in newMessages) {
+        _apiMessageIds.remove(fsMsg.id);
       }
       
       // Sort by timestamp
@@ -331,6 +390,7 @@ class ChatController extends BaseController {
       
       if (kDebugMode) {
         print('  - Merged: ${mergedMessages.length} messages (${newMessages.length} from Firestore, ${localTempMessages.length} temp)');
+        print('  - Tracked API IDs: ${_apiMessageIds.length}');
       }
       
       // Update messages list
@@ -488,14 +548,28 @@ class ChatController extends BaseController {
 
     // Store message text before clearing input
     final messageText = message;
+    
+    // Check if this exact message is already being processed (prevent duplicates)
+    if (_pendingMessageTexts.contains(messageText)) {
+      if (kDebugMode) {
+        print('⚠️ Message already being processed, ignoring duplicate: $messageText');
+      }
+      return;
+    }
+    
+    // Store temp message ID for error handling
+    String? tempUserMessageId;
 
     try {
+      // Mark message as pending
+      _pendingMessageTexts.add(messageText);
+      
       // Clear input immediately for better UX
       inputController.clear();
 
       // Add user message to UI immediately for instant feedback
       final userMessageTimestamp = DateTime.now();
-      final tempUserMessageId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+      tempUserMessageId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
       final userMessage = ChatMessageModel(
         id: tempUserMessageId,
         userId: userId!,
@@ -503,6 +577,21 @@ class ChatController extends BaseController {
         type: 'user', // Use string directly instead of AppConstants
         timestamp: userMessageTimestamp,
       );
+      
+      // Check if we already have this exact message (prevent duplicates)
+      final hasDuplicate = messages.any((msg) => 
+        msg.message == messageText && 
+        msg.type == 'user' &&
+        (DateTime.now().difference(msg.timestamp).inSeconds < 5)
+      );
+      
+      if (hasDuplicate) {
+        if (kDebugMode) {
+          print('⚠️ Duplicate user message detected, skipping: $messageText');
+        }
+        _pendingMessageTexts.remove(messageText);
+        return;
+      }
       
       // Add user message to the list immediately
       final updatedMessages = List<ChatMessageModel>.from(messages);
@@ -512,8 +601,18 @@ class ChatController extends BaseController {
       // Show typing indicator
       isTyping.value = true;
 
+      // Cancel any existing API request
+      // Note: We can't actually cancel http requests, but we can ignore the result
+      if (_currentApiRequest != null) {
+        if (kDebugMode) {
+          print('⚠️ Cancelling previous API request');
+        }
+      }
+
       // Send message via API and get AI response
-      await _sendMessageWithAPI(messageText);
+      _currentApiRequest = _sendMessageWithAPI(messageText, messageText);
+      await _currentApiRequest;
+      _currentApiRequest = null;
 
       // Update remaining messages (only if not in free trial and not subscribed)
       final user = currentUser;
@@ -530,6 +629,14 @@ class ChatController extends BaseController {
       }
       setError(e.toString());
       
+      // Remove temp user message on error (if it was added)
+      final updatedMessages = List<ChatMessageModel>.from(messages);
+      updatedMessages.removeWhere((msg) => 
+        msg.id == tempUserMessageId || 
+        (msg.id.startsWith('temp_') && msg.type == 'user' && msg.message == messageText)
+      );
+      messages.value = updatedMessages;
+      
       // Restore message in input field on error
       inputController.text = messageText;
       
@@ -542,13 +649,17 @@ class ChatController extends BaseController {
             : 'We couldn\'t send your message. Please check your connection and try again.',
       );
     } finally {
+      // Always remove from pending set and clear request
+      _pendingMessageTexts.remove(messageText);
+      _currentApiRequest = null;
+      
       // Hide typing indicator
-        isTyping.value = false;
+      isTyping.value = false;
     }
   }
 
   /// Send message using API and update UI directly from response
-  Future<void> _sendMessageWithAPI(String message) async {
+  Future<void> _sendMessageWithAPI(String message, String originalMessageText) async {
     if (userId == null) return;
 
     // Call backend API
@@ -633,11 +744,70 @@ class ChatController extends BaseController {
       throw Exception('AI response is empty');
     }
     
-    // Don't add messages locally - Firestore stream will handle all updates
-    // The API saves both user and AI messages to Firestore, so the stream will update
-    // This prevents duplicates since we use Firestore as the single source of truth
+    // Extract message IDs from API response (if available)
+    final userMessageId = response['user_message_id']?.toString();
+    final aiMessageId = response['ai_message_id']?.toString();
+    
+    // Track these IDs to prevent duplicates when Firestore stream updates
+    if (userMessageId != null) {
+      _apiMessageIds.add(userMessageId);
+    }
+    if (aiMessageId != null) {
+      _apiMessageIds.add(aiMessageId);
+    }
+    
+    // Check if we already have this AI response (prevent duplicates from retries)
+    final hasDuplicateAi = messages.any((msg) => 
+      msg.message == aiResponseText && 
+      msg.type == 'ai' &&
+      (DateTime.now().difference(msg.timestamp).inSeconds < 10)
+    );
+    
+    if (hasDuplicateAi) {
+      if (kDebugMode) {
+        print('⚠️ Duplicate AI message detected, skipping: ${aiResponseText.substring(0, aiResponseText.length > 50 ? 50 : aiResponseText.length)}...');
+      }
+      return;
+    }
+    
+    // Immediately add AI message to UI for instant feedback
+    // Firestore stream will update later and replace temp messages with real ones
+    final aiMessageTimestamp = DateTime.now();
+    final tempAiMessageId = aiMessageId ?? 'temp_ai_${DateTime.now().millisecondsSinceEpoch}';
+    
+    final aiMessage = ChatMessageModel(
+      id: tempAiMessageId,
+      userId: userId!,
+      message: aiResponseText,
+      type: 'ai',
+      timestamp: aiMessageTimestamp,
+    );
+    
+    // Add AI message immediately to the list
+    final updatedMessages = List<ChatMessageModel>.from(messages);
+    
+    // Replace temp user message with real one if we have user_message_id
+    if (userMessageId != null) {
+      final tempUserIndex = updatedMessages.indexWhere(
+        (msg) => msg.id.startsWith('temp_') && msg.type == 'user' && msg.message == originalMessageText,
+      );
+      if (tempUserIndex != -1) {
+        // Replace temp user message with real ID
+        updatedMessages[tempUserIndex] = updatedMessages[tempUserIndex].copyWith(id: userMessageId);
+        // Track this ID so Firestore stream knows it's already handled
+        _apiMessageIds.add(userMessageId);
+      }
+    }
+    
+    // Add AI message
+    updatedMessages.add(aiMessage);
+    messages.value = updatedMessages;
+    
     if (kDebugMode) {
-      print('✅ API response received. Firestore stream will update with user and AI messages...');
+      print('✅ Added AI message immediately from API response');
+      print('  - User Message ID: $userMessageId');
+      print('  - AI Message ID: $aiMessageId');
+      print('  - Firestore stream will sync and replace temp messages with real ones');
     }
   }
 
