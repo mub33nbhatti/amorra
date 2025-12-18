@@ -44,18 +44,18 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
                 color: AppColors.primary,
                 icon: Iconsax.card_send,
               ),
-              // AnalyticsCardItem(
-              //   label: WebTexts.analyticsActive,
-              //   value: analytics['activeSubscriptions']?.toString() ?? '0',
-              //   color: AppColors.success,
-              //   icon: Iconsax.tick_circle,
-              // ),
-              // AnalyticsCardItem(
-              //   label: WebTexts.analyticsCancelled,
-              //   value: analytics['cancelledSubscriptions']?.toString() ?? '0',
-              //   color: Colors.orange,
-              //   icon: Iconsax.close_circle,
-              // ),
+              AnalyticsCardItem(
+                label: WebTexts.analyticsActive,
+                value: analytics['activeSubscriptions']?.toString() ?? '0',
+                color: AppColors.success,
+                icon: Iconsax.tick_circle,
+              ),
+              AnalyticsCardItem(
+                label: WebTexts.analyticsCancelled,
+                value: analytics['cancelledSubscriptions']?.toString() ?? '0',
+                color: Colors.orange,
+                icon: Iconsax.close_circle,
+              ),
               AnalyticsCardItem(
                 label: WebTexts.analyticsMRR,
                 value:
@@ -70,50 +70,55 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
         WebSpacing.section(context),
 
         // Header Section (Fixed at top)
-        // PageHeader(
-        //   title: WebTexts.subscriptionsTitle,
-        //   searchHint: WebTexts.subscriptionsSearchHint,
-        //   searchController: searchController,
-        //   onSearchChanged: (value) {
-        //     controller.searchQuery.value = value;
-        //     if (value.isEmpty) {
-        //       controller.loadSubscriptions();
-        //     }
-        //   },
-        //   filterChips: Obx(() => FilterChipsRow(
-        //         chips: [
-        //           FilterChipItem(
-        //             label: WebTexts.subscriptionsFilterAll,
-        //             isSelected: controller.selectedFilter.value == 'all',
-        //             onTap: () => controller.setFilter('all'),
-        //           ),
-        //           FilterChipItem(
-        //             label: WebTexts.subscriptionsFilterActive,
-        //             isSelected:
-        //                 controller.selectedFilter.value ==
-        //                     AppConstants.subscriptionStatusActive,
-        //             onTap: () =>
-        //                 controller.setFilter(AppConstants.subscriptionStatusActive),
-        //           ),
-        //           FilterChipItem(
-        //             label: WebTexts.subscriptionsFilterCancelled,
-        //             isSelected:
-        //                 controller.selectedFilter.value ==
-        //                     AppConstants.subscriptionStatusCancelled,
-        //             onTap: () => controller
-        //                 .setFilter(AppConstants.subscriptionStatusCancelled),
-        //           ),
-        //           FilterChipItem(
-        //             label: WebTexts.subscriptionsFilterExpired,
-        //             isSelected:
-        //                 controller.selectedFilter.value ==
-        //                     AppConstants.subscriptionStatusExpired,
-        //             onTap: () =>
-        //                 controller.setFilter(AppConstants.subscriptionStatusExpired),
-        //           ),
-        //         ],
-        //       )),
-        // ),
+        PageHeader(
+          title: WebTexts.subscriptionsTitle,
+          searchHint: WebTexts.subscriptionsSearchHint,
+          searchController: searchController,
+          onSearchChanged: (value) {
+            controller.searchQuery.value = value;
+            if (value.isEmpty) {
+              controller.loadSubscriptions();
+            }
+          },
+          filterChips: Obx(
+            () => FilterChipsRow(
+              chips: [
+                FilterChipItem(
+                  label: WebTexts.subscriptionsFilterAll,
+                  isSelected: controller.selectedFilter.value == 'all',
+                  onTap: () => controller.setFilter('all'),
+                ),
+                FilterChipItem(
+                  label: WebTexts.subscriptionsFilterActive,
+                  isSelected:
+                      controller.selectedFilter.value ==
+                      AppConstants.subscriptionStatusActive,
+                  onTap: () => controller.setFilter(
+                    AppConstants.subscriptionStatusActive,
+                  ),
+                ),
+                FilterChipItem(
+                  label: WebTexts.subscriptionsFilterCancelled,
+                  isSelected:
+                      controller.selectedFilter.value ==
+                      AppConstants.subscriptionStatusCancelled,
+                  onTap: () => controller.setFilter(
+                    AppConstants.subscriptionStatusCancelled,
+                  ),
+                ),
+                FilterChipItem(
+                  label: WebTexts.subscriptionsFilterExpired,
+                  isSelected:
+                      controller.selectedFilter.value ==
+                      AppConstants.subscriptionStatusExpired,
+                  onTap: () => controller.setFilter(
+                    AppConstants.subscriptionStatusExpired,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
 
         WebSpacing.section(context),
 
@@ -169,7 +174,9 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
   }
 
   void _showSubscriptionDetails(
-      BuildContext context, SubscriptionModel subscription) {
+    BuildContext context,
+    SubscriptionModel subscription,
+  ) {
     WebAlertDialog.showDetail(
       context: context,
       title: WebTexts.subscriptionDetailsTitle,
@@ -177,10 +184,7 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
       detailRows: [
         DetailRow(
           label: WebTexts.subscriptionDetailsId,
-          value: Text(
-            subscription.id,
-            style: WebTextStyles.bodyText(context),
-          ),
+          value: Text(subscription.id, style: WebTextStyles.bodyText(context)),
         ),
         DetailRow(
           label: WebTexts.subscriptionDetailsUserId,
@@ -276,19 +280,21 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
   }
 
   void _handleCancelSubscription(
-      BuildContext context, SubscriptionModel subscription) {
+    BuildContext context,
+    SubscriptionModel subscription,
+  ) {
     SubscriptionActionDialogs.showCancelDialog(
       context,
       subscription,
-      (reason) => controller.cancelSubscription(
-        subscription.id,
-        reason: reason,
-      ),
+      (reason) =>
+          controller.cancelSubscription(subscription.id, reason: reason),
     );
   }
 
   void _handleReactivateSubscription(
-      BuildContext context, SubscriptionModel subscription) {
+    BuildContext context,
+    SubscriptionModel subscription,
+  ) {
     SubscriptionActionDialogs.showReactivateDialog(
       context,
       subscription,

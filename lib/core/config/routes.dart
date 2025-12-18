@@ -110,4 +110,23 @@ class AppRoutes {
       ),
     ];
   }
+
+  /// Get admin-only routes
+  /// Used for separate admin dashboard deployment
+  static List<GetPage> getAdminRoutes() {
+    return [
+      GetPage(
+        name: adminLogin,
+        page: () => const AdminLoginScreen(),
+        binding: AdminBinding(),
+        preventDuplicates: true,
+      ),
+      GetPage(
+        name: adminDashboard,
+        page: () => const AdminDashboardScreen(),
+        binding: AdminBinding(),
+        preventDuplicates: true,
+      ),
+    ];
+  }
 }
