@@ -4,8 +4,8 @@ class WebTexts {
   WebTexts._();
 
   // Admin Dashboard
-  static const String adminDashboard = "Admin Dashboard";
-  static const String adminLoginTitle = "Admin Dashboard";
+  static const String adminDashboard = "Amorra Admin Dashboard";
+  static const String adminLoginTitle = "Amorra Admin Dashboard";
   static const String adminLoginSubtitle = "Sign in to access the admin panel";
   static const String adminEmailLabel = "Email";
   static const String adminEmailHint = "admin@example.com";

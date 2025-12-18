@@ -1,4 +1,3 @@
-import 'package:amorra/presentation/screens/main/not_found/not_found_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
@@ -7,6 +6,7 @@ import 'package:amorra/presentation/controllers/admin/admin_dashboard_controller
 import 'package:amorra/presentation/screens/admin/users/admin_users_screen.dart';
 import 'package:amorra/presentation/screens/admin/subscriptions/admin_subscriptions_screen.dart';
 import 'package:amorra/presentation/widgets/admin_web/common/web_sidebar.dart';
+import 'package:amorra/presentation/widgets/admin_web/common/web_alert_dialog.dart';
 import 'package:amorra/core/utils/web/web_responsive/web_responsive.dart';
 import 'package:amorra/core/utils/web/web_spacing/web_spacing.dart';
 import 'package:amorra/core/utils/web/web_text_styles/web_text_styles.dart';
@@ -32,13 +32,11 @@ class AdminDashboardScreen extends GetView<AdminAuthController> {
       appBar: AppBar(
         title: Text(
           WebTexts.adminDashboard,
-          style: WebTextStyles.heading(context).copyWith(
-            color: AppColors.white,
-          ),
+          style: WebTextStyles.heading(
+            context,
+          ).copyWith(color: AppColors.white),
         ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration().withAppGradient(),
-        ),
+        flexibleSpace: Container(decoration: BoxDecoration().withAppGradient()),
         foregroundColor: AppColors.white,
         elevation: 0,
         leading: WebResponsive.isMobile(context)
@@ -69,26 +67,30 @@ class AdminDashboardScreen extends GetView<AdminAuthController> {
       drawer: WebResponsive.isMobile(context)
           ? Drawer(
               width: WebResponsive.sidebarWidth(context),
-              child: Obx(() => WebSidebar(
-                    selectedIndex: dashboardController.selectedIndex.value,
-                    onItemSelected: (index) {
-                      dashboardController.setSelectedIndex(index);
-                      scaffoldKey.currentState?.closeDrawer();
-                    },
-                    currentUserEmail: controller.currentAdminEmail,
-                  )),
+              child: Obx(
+                () => WebSidebar(
+                  selectedIndex: dashboardController.selectedIndex.value,
+                  onItemSelected: (index) {
+                    dashboardController.setSelectedIndex(index);
+                    scaffoldKey.currentState?.closeDrawer();
+                  },
+                  currentUserEmail: controller.currentAdminEmail,
+                ),
+              ),
             )
           : null,
       body: Row(
         children: [
           // Sidebar Navigation (Desktop only)
           if (WebResponsive.isDesktop(context))
-            Obx(() => WebSidebar(
-                  selectedIndex: dashboardController.selectedIndex.value,
-                  onItemSelected: (index) =>
-                      dashboardController.setSelectedIndex(index),
-                  currentUserEmail: controller.currentAdminEmail,
-                )),
+            Obx(
+              () => WebSidebar(
+                selectedIndex: dashboardController.selectedIndex.value,
+                onItemSelected: (index) =>
+                    dashboardController.setSelectedIndex(index),
+                currentUserEmail: controller.currentAdminEmail,
+              ),
+            ),
 
           // Main Content Area
           Expanded(
@@ -101,7 +103,7 @@ class AdminDashboardScreen extends GetView<AdminAuthController> {
                 if (dashboardController.selectedIndex.value == 0) {
                   return const AdminUsersScreen();
                 } else {
-                  return const NotFoundScreen();
+                  return const AdminSubscriptionsScreen();
                 }
               }),
             ),
@@ -112,35 +114,18 @@ class AdminDashboardScreen extends GetView<AdminAuthController> {
   }
 
   void _handleSignOut(AdminAuthController controller) {
-    // return const AdminSubscriptionsScreen();
-    Get.dialog(
-      AlertDialog(
-        title: Text(
-          WebTexts.adminSignOut,
-          style: WebTextStyles.heading(Get.context!),
-        ),
-        content: Text(
-          WebTexts.adminSignOutConfirm,
-          style: WebTextStyles.bodyText(Get.context!),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text(WebTexts.actionCancel),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back();
-              controller.signOut();
-              Get.offAllNamed(AppRoutes.adminLogin);
-            },
-            child: Text(
-              WebTexts.adminSignOut,
-              style: const TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
+    WebAlertDialog.show(
+      context: Get.context!,
+      title: WebTexts.adminSignOut,
+      content: WebTexts.adminSignOutConfirm,
+      icon: Iconsax.logout,
+      secondaryButtonText: WebTexts.actionCancel,
+      primaryButtonText: WebTexts.adminSignOut,
+      primaryButtonColor: AppColors.error,
+      onPrimaryPressed: () {
+        controller.signOut();
+        Get.offAllNamed(AppRoutes.adminLogin);
+      },
     );
   }
 }

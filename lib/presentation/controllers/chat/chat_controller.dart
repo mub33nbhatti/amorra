@@ -9,6 +9,7 @@ import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/core/config/app_config.dart';
 import 'package:amorra/core/utils/free_trial_utils.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
+import 'package:amorra/presentation/controllers/subscription/subscription_controller.dart';
 import 'package:amorra/data/services/chat_api_service.dart';
 import 'package:amorra/presentation/controllers/auth/profile_setup/profile_setup_controller.dart';
 import 'package:amorra/presentation/widgets/auth/profile_setup/profile_setup_bottom_sheet.dart';
@@ -536,8 +537,17 @@ class ChatController extends BaseController {
       return;
     }
 
-    // Check if user can send message
+    // Check if user is blocked
     final user = currentUser;
+    if (user != null && user.isBlocked) {
+      showError(
+        'Account Blocked',
+        subtitle: 'Your account has been blocked. Please contact support if you believe this is an error.',
+      );
+      return;
+    }
+
+    // Check if user can send message
     // Check subscription status first
     final isSubscribed = user?.isSubscribed ?? false;
     // Check free trial status
@@ -628,6 +638,18 @@ class ChatController extends BaseController {
       
       if (!hasUnlimited) {
         remainingMessages.value = (remainingMessages.value - 1).clamp(0, 999);
+        
+        // Also update SubscriptionController to keep ProfileScreen in sync
+        try {
+          if (Get.isRegistered<SubscriptionController>()) {
+            final subscriptionController = Get.find<SubscriptionController>();
+            subscriptionController.remainingFreeMessages.value = remainingMessages.value;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('⚠️ Could not sync with SubscriptionController: $e');
+          }
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -840,12 +862,36 @@ class ChatController extends BaseController {
       // For now, use mock data or existing Firestore data
       final limit = await _chatApiService.checkDailyLimit(userId!);
       remainingMessages.value = limit;
+      
+      // Also sync with SubscriptionController to keep ProfileScreen in sync
+      try {
+        if (Get.isRegistered<SubscriptionController>()) {
+          final subscriptionController = Get.find<SubscriptionController>();
+          subscriptionController.remainingFreeMessages.value = limit;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Could not sync with SubscriptionController: $e');
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error checking daily limit: $e');
       }
       // Default to free tier limit if check fails
       remainingMessages.value = AppConfig.freeMessageLimit;
+      
+      // Also sync with SubscriptionController
+      try {
+        if (Get.isRegistered<SubscriptionController>()) {
+          final subscriptionController = Get.find<SubscriptionController>();
+          subscriptionController.remainingFreeMessages.value = AppConfig.freeMessageLimit;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Could not sync with SubscriptionController: $e');
+        }
+      }
     }
   }
 

@@ -29,7 +29,7 @@ class WebButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDisabled = onPressed == null || isLoading;
-    final buttonColor = backgroundColor ?? AppColors.primary;
+    final buttonColor = backgroundColor ?? AppColors.secondary;
     final finalTextColor = textColor ?? (isOutlined ? buttonColor : AppColors.white);
 
     return SizedBox(

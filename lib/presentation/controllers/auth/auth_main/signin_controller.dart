@@ -242,9 +242,27 @@ class SigninController extends BaseController {
 
       if (_isDisposed || _isNavigating) return;
 
-      // Check age verification and profile setup status
+      // Check if user is blocked first
       final currentUser = _firebaseService.currentUser;
       if (currentUser != null) {
+        final userModel = await _authRepository.getCurrentUser();
+        
+        if (userModel != null && userModel.isBlocked) {
+          // User is blocked, navigate to blocked user screen
+          if (kDebugMode) {
+            print('🚫 User is blocked, navigating to blocked user screen');
+          }
+          
+          _isNavigating = true;
+          await Future.delayed(const Duration(milliseconds: 300));
+          
+          if (!_isDisposed) {
+            Get.offAllNamed(routes.AppRoutes.blockedUser);
+          }
+          return;
+        }
+        
+        // User is not blocked, check age verification and profile setup status
         final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);
         
         if (verificationStatus == null || verificationStatus['isAgeVerified'] != true) {

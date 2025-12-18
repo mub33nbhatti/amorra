@@ -9,12 +9,14 @@ import 'package:amorra/presentation/screens/auth/profile_setup/profile_setup_scr
 import 'package:amorra/presentation/screens/auth/onboarding/onboarding_screen.dart';
 import 'package:amorra/presentation/screens/admin/admin_login_screen.dart';
 import 'package:amorra/presentation/screens/admin/admin_dashboard_screen.dart';
+import 'package:amorra/presentation/screens/auth/blocked/blocked_user_screen.dart';
 import 'package:amorra/presentation/bindings/auth_binding.dart';
 import 'package:amorra/presentation/bindings/splash_binding.dart';
 import 'package:amorra/presentation/bindings/main_binding.dart';
 import 'package:amorra/presentation/bindings/auth/onboarding_binding.dart';
 import 'package:amorra/presentation/bindings/age_verification_binding.dart';
 import 'package:amorra/presentation/bindings/admin_binding.dart';
+import 'package:amorra/presentation/bindings/auth/blocked_user_binding.dart';
 
 /// App Routes
 /// Centralized route definitions for GetX navigation
@@ -36,6 +38,7 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String adminLogin = '/admin-login';
   static const String adminDashboard = '/admin-dashboard';
+  static const String blockedUser = '/blocked-user';
 
   /// Get all routes
   static List<GetPage> getRoutes() {
@@ -97,6 +100,12 @@ class AppRoutes {
         name: adminDashboard,
         page: () => const AdminDashboardScreen(),
         binding: AdminBinding(),
+        preventDuplicates: true,
+      ),
+      GetPage(
+        name: blockedUser,
+        page: () => const BlockedUserScreen(),
+        binding: BlockedUserBinding(),
         preventDuplicates: true,
       ),
     ];

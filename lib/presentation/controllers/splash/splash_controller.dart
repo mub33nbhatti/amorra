@@ -42,9 +42,26 @@ class SplashController extends BaseController {
         final currentUser = _firebaseService.currentUser;
         
         if (currentUser != null) {
-          // User is authenticated, check age verification
+          // User is authenticated, first check if user is blocked
           if (kDebugMode) {
-            print('✅ User authenticated, checking age verification');
+            print('✅ User authenticated, checking if user is blocked');
+          }
+          
+          // Get user data to check isBlocked status
+          final userModel = await _authRepository.getCurrentUser();
+          
+          if (userModel != null && userModel.isBlocked) {
+            // User is blocked, navigate to blocked user screen
+            if (kDebugMode) {
+              print('🚫 User is blocked, navigating to blocked user screen');
+            }
+            Get.offAllNamed(AppRoutes.blockedUser);
+            return;
+          }
+          
+          // User is not blocked, check age verification
+          if (kDebugMode) {
+            print('✅ User not blocked, checking age verification');
           }
           
           final verificationStatus = await _authRepository.getAgeVerificationStatus(currentUser.uid);

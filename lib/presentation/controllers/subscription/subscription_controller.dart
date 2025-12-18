@@ -8,6 +8,7 @@ import 'package:amorra/core/constants/app_constants.dart';
 import 'package:amorra/core/utils/free_trial_utils.dart';
 import 'package:amorra/data/services/firebase_service.dart';
 import 'package:amorra/data/services/stripe_service.dart';
+import 'package:amorra/data/services/chat_api_service.dart';
 import 'package:amorra/data/repositories/auth_repository.dart';
 import 'package:amorra/presentation/controllers/base_controller.dart';
 import 'package:amorra/presentation/controllers/auth/auth_controller.dart';
@@ -18,6 +19,7 @@ class SubscriptionController extends BaseController {
   final FirebaseService _firebaseService = FirebaseService();
   final StripeService _stripeService = StripeService();
   final AuthRepository _authRepository = AuthRepository();
+  final ChatApiService _chatApiService = ChatApiService();
 
   // State
   final Rx<SubscriptionModel?> subscription = Rx<SubscriptionModel?>(null);
@@ -44,6 +46,7 @@ class SubscriptionController extends BaseController {
     checkSubscriptionStatus();
     _setupSubscriptionListener();
     _setupUserListener();
+    _checkDailyLimit();
   }
 
   /// Setup listener for user changes to update free trial status
@@ -53,6 +56,10 @@ class SubscriptionController extends BaseController {
         final authController = Get.find<AuthController>();
         ever(authController.currentUser, (UserModel? user) {
           _checkFreeTrialStatus();
+          // Also check daily limit when user changes
+          if (user != null) {
+            _checkDailyLimit();
+          }
         });
       }
     } catch (e) {
@@ -70,6 +77,39 @@ class SubscriptionController extends BaseController {
       // If within free trial, set unlimited messages
       if (isWithinFreeTrial.value) {
         remainingFreeMessages.value = 999; // Unlimited indicator
+      } else {
+        // If not in trial, check daily limit
+        _checkDailyLimit();
+      }
+    }
+  }
+
+  /// Check daily message limit from Firestore
+  Future<void> _checkDailyLimit() async {
+    final user = currentUser;
+    if (user == null) return;
+
+    // Don't check if subscribed or in free trial
+    if (isSubscribed.value || isWithinFreeTrial.value) {
+      remainingFreeMessages.value = 999;
+      return;
+    }
+
+    try {
+      final userId = user.id;
+      final remaining = await _chatApiService.checkDailyLimit(userId);
+      remainingFreeMessages.value = remaining;
+      
+      if (kDebugMode) {
+        print('📊 SubscriptionController: Updated remaining messages to $remaining');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error checking daily limit in SubscriptionController: $e');
+      }
+      // On error, keep current value or set to default
+      if (remainingFreeMessages.value >= 999) {
+        remainingFreeMessages.value = AppConfig.freeMessageLimit;
       }
     }
   }

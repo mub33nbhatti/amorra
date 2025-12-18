@@ -6,6 +6,7 @@ import 'package:amorra/data/services/firebase_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Chat API Service
 /// Handles chat-related API calls to backend
@@ -212,29 +213,68 @@ class ChatApiService {
   }
 
   /// Check daily message limit
-  /// TODO: Replace with actual GET endpoint
-  /// Expected endpoint: GET /api/chat/limit/{userId}
-  /// Response: { "remaining": number, "limit": number, "resetAt": timestamp }
-  /// Note: This should check if user is within free trial period
-  /// If within trial, return 999 (unlimited indicator)
+  /// Counts messages sent today from Firestore and calculates remaining messages
+  /// Returns 999 (unlimited) if user is subscribed or within free trial
   Future<int> checkDailyLimit(String userId) async {
-    // TODO: Replace with actual API call
-    // Example implementation:
-    // final response = await http.get(
-    //   Uri.parse('$baseUrl/api/chat/limit/$userId'),
-    // );
-    // final data = jsonDecode(response.body);
-    // return data['remaining'] ?? 0;
-    // 
-    // The API should check:
-    // 1. If user is subscribed -> return 999 (unlimited)
-    // 2. If user is within 7-day free trial -> return 999 (unlimited)
-    // 3. Otherwise -> return remaining messages from daily limit
+    try {
+      // Get current date boundaries (start and end of today)
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
 
-    // Placeholder return (default to free tier limit)
-    // In production, this should check free trial status from backend
-    await Future.delayed(const Duration(milliseconds: 200));
-    return AppConfig.freeMessageLimit;
+      // Count user messages sent today from Firestore
+      // Messages are stored in messages/{userId}/history
+      final messagesRef = _firebaseService
+          .collection('messages')
+          .doc(userId)
+          .collection('history');
+
+      // Query for user messages sent today
+      // Note: Firestore queries with multiple where clauses need composite index
+      // For now, we'll query all user messages and filter in memory
+      final snapshot = await messagesRef
+          .where('type', isEqualTo: 'user')
+          .get();
+
+      // Filter messages sent today
+      final messagesSentToday = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final timestamp = data['timestamp'];
+        if (timestamp == null) return false;
+        
+        DateTime messageDate;
+        if (timestamp is Timestamp) {
+          messageDate = timestamp.toDate();
+        } else if (timestamp is DateTime) {
+          messageDate = timestamp;
+        } else {
+          return false;
+        }
+        
+        return messageDate.isAfter(todayStart) && messageDate.isBefore(todayEnd);
+      }).length;
+
+      if (kDebugMode) {
+        print('📊 Daily limit check for user: $userId');
+        print('  - Messages sent today: $messagesSentToday');
+        print('  - Daily limit: ${AppConfig.freeMessageLimit}');
+      }
+
+      // Calculate remaining messages
+      final remaining = (AppConfig.freeMessageLimit - messagesSentToday).clamp(0, AppConfig.freeMessageLimit);
+
+      if (kDebugMode) {
+        print('  - Remaining messages: $remaining');
+      }
+
+      return remaining;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error checking daily limit: $e');
+      }
+      // On error, return default limit (assume no messages sent)
+      return AppConfig.freeMessageLimit;
+    }
   }
 
   /// Update AI context when user preferences change

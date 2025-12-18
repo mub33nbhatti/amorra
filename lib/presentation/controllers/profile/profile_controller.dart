@@ -29,6 +29,9 @@ class ProfileController extends BaseController {
   final TextEditingController nameController = TextEditingController();
   final RxBool isLogoutLoading = false.obs;
   final RxBool isDeleteAccountLoading = false.obs;
+  
+  // Reactive remaining messages (synced with SubscriptionController)
+  final RxInt remainingFreeMessagesReactive = AppConfig.freeMessageLimit.obs;
 
   // Get AuthController
   AuthController? get _authController {
@@ -56,6 +59,7 @@ class ProfileController extends BaseController {
     super.onInit();
     _loadUserData();
     _setupUserListener();
+    _setupSubscriptionListener();
   }
 
   @override
@@ -81,8 +85,11 @@ class ProfileController extends BaseController {
           user.value = updatedUser;
           editedName.value = updatedUser.name;
           nameController.text = updatedUser.name;
+          // Update remaining messages when user changes
+          _updateRemainingMessages();
         } else {
           user.value = null;
+          _updateRemainingMessages();
         }
       });
 
@@ -96,6 +103,69 @@ class ProfileController extends BaseController {
       if (kDebugMode) {
         print('Error setting up user listener: $e');
       }
+    }
+  }
+
+  /// Setup listener for subscription controller changes
+  void _setupSubscriptionListener() {
+    try {
+      final subscriptionController = _subscriptionController;
+      if (subscriptionController == null) {
+        if (kDebugMode) {
+          print('⚠️ SubscriptionController not available in ProfileController');
+        }
+        return;
+      }
+      
+      // Listen to remainingFreeMessages changes
+      ever(subscriptionController.remainingFreeMessages, (int remaining) {
+        remainingFreeMessagesReactive.value = remaining;
+      });
+      
+      // Listen to isSubscribed changes
+      ever(subscriptionController.isSubscribed, (bool subscribed) {
+        // Update remaining messages when subscription status changes
+        _updateRemainingMessages();
+      });
+      
+      // Listen to isWithinFreeTrial changes
+      ever(subscriptionController.isWithinFreeTrial, (bool inTrial) {
+        // Update remaining messages when trial status changes
+        _updateRemainingMessages();
+      });
+      
+      // Set initial value
+      _updateRemainingMessages();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error setting up subscription listener: $e');
+      }
+    }
+  }
+
+  /// Update remaining messages based on current state
+  void _updateRemainingMessages() {
+    // Check subscription status first - subscribed users have unlimited
+    if (isSubscribed) {
+      remainingFreeMessagesReactive.value = 999;
+      return;
+    }
+    
+    final currentUser = user.value;
+    final isInTrial = currentUser != null && FreeTrialUtils.isWithinFreeTrial(currentUser);
+    
+    // If in free trial, return unlimited indicator
+    if (isInTrial) {
+      remainingFreeMessagesReactive.value = 999;
+      return;
+    }
+    
+    // Get from subscription controller
+    final subscriptionController = _subscriptionController;
+    if (subscriptionController != null) {
+      remainingFreeMessagesReactive.value = subscriptionController.remainingFreeMessages.value;
+    } else {
+      remainingFreeMessagesReactive.value = AppConfig.freeMessageLimit;
     }
   }
 
@@ -366,20 +436,8 @@ class ProfileController extends BaseController {
     return user.value?.isSubscribed ?? false;
   }
 
-  /// Get remaining free messages
-  int get remainingFreeMessages {
-    // Check subscription status first - subscribed users have unlimited
-    if (isSubscribed) return 999;
-    
-    final currentUser = user.value;
-    final isInTrial = currentUser != null && FreeTrialUtils.isWithinFreeTrial(currentUser);
-    
-    // If in free trial, return unlimited indicator
-    if (isInTrial) return 999;
-    
-    return _subscriptionController?.remainingFreeMessages.value ??
-        AppConfig.freeMessageLimit;
-  }
+  /// Get remaining free messages (reactive)
+  int get remainingFreeMessages => remainingFreeMessagesReactive.value;
 
   /// Get used messages (for progress indicator)
   int get usedMessages {
