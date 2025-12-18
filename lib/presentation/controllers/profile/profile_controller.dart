@@ -34,9 +34,11 @@ class ProfileController extends BaseController {
   final TextEditingController nameController = TextEditingController();
   final RxBool isLogoutLoading = false.obs;
   final RxBool isDeleteAccountLoading = false.obs;
-
+  
+  // Image upload state
   final RxBool isUploadingImage = false.obs;
   final RxInt currentImageIndex = 0.obs; // 0 = avatar, 1 = profile image
+  // Reactive remaining messages (synced with SubscriptionController)
   final RxInt remainingFreeMessagesReactive = AppConfig.freeMessageLimit.obs;
 
   // Get AuthController
