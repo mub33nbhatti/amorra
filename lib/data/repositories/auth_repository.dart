@@ -14,7 +14,11 @@ class SignupRequiredException implements Exception {
   final String? displayName;
   final AuthCredential googleCredential;
 
-  SignupRequiredException(this.email, {this.displayName, required this.googleCredential});
+  SignupRequiredException(
+    this.email, {
+    this.displayName,
+    required this.googleCredential,
+  });
 
   @override
   String toString() => 'Signup required for email: $email';
@@ -57,7 +61,8 @@ class AuthRepository {
     return GoogleSignIn(
       scopes: ['email', 'profile'],
       // Web client ID from Firebase Console Google Sign-in configuration
-      serverClientId: '39064571782-sh2fq4jo5ls3v4tppp4tgcldlp43vvvn.apps.googleusercontent.com',
+      serverClientId:
+          '39064571782-sh2fq4jo5ls3v4tppp4tgcldlp43vvvn.apps.googleusercontent.com',
     );
   }
 
@@ -65,7 +70,6 @@ class AuthRepository {
   String _normalizeEmail(String email) {
     return email.toLowerCase().trim();
   }
-
 
   /// Find user document by email (used for email/password signin)
   Future<DocumentSnapshot?> _findUserByEmail(String email) async {
@@ -100,7 +104,6 @@ class AuthRepository {
       return null;
     }
   }
-
 
   /// Sign in with email and password
   Future<UserModel> signInWithEmailAndPassword({
@@ -154,10 +157,7 @@ class AuthRepository {
 
       if (userDoc.exists) {
         final userData = userDoc.data() as Map<String, dynamic>?;
-        return UserModel.fromJson({
-          'id': finalUser.uid,
-          ...?userData,
-        });
+        return UserModel.fromJson({'id': finalUser.uid, ...?userData});
       } else {
         // Create document if missing
         final userModel = UserModel(
@@ -190,7 +190,9 @@ class AuthRepository {
       // Check if there's a pending Google credential to link
       if (_pendingGoogleCredential != null) {
         if (kDebugMode) {
-          print('🔗 Pending Google credential found, creating account with BOTH providers');
+          print(
+            '🔗 Pending Google credential found, creating account with BOTH providers',
+          );
         }
 
         // User coming from Google sign-in flow
@@ -204,10 +206,11 @@ class AuthRepository {
       }
 
       // Regular sign up without Google (email/password only)
-      final credential = await _firebaseService.auth.createUserWithEmailAndPassword(
-        email: normalizedEmail,
-        password: password,
-      );
+      final credential = await _firebaseService.auth
+          .createUserWithEmailAndPassword(
+            email: normalizedEmail,
+            password: password,
+          );
 
       if (credential.user == null) {
         throw Exception('Sign up failed: User is null');
@@ -254,10 +257,11 @@ class AuthRepository {
       }
 
       // STEP 1: Create Auth account with email/password
-      final credential = await _firebaseService.auth.createUserWithEmailAndPassword(
-        email: normalizedEmail,
-        password: password,
-      );
+      final credential = await _firebaseService.auth
+          .createUserWithEmailAndPassword(
+            email: normalizedEmail,
+            password: password,
+          );
 
       createdUser = credential.user;
 
@@ -275,7 +279,9 @@ class AuthRepository {
           print('🔗 Linking Google provider...');
         }
 
-        final linkedCredential = await createdUser.linkWithCredential(googleCredential);
+        final linkedCredential = await createdUser.linkWithCredential(
+          googleCredential,
+        );
 
         // Reload to get updated provider data
         await linkedCredential.user?.reload();
@@ -286,7 +292,9 @@ class AuthRepository {
         }
 
         // Verify both providers are linked
-        final providers = updatedUser.providerData.map((p) => p.providerId).toList();
+        final providers = updatedUser.providerData
+            .map((p) => p.providerId)
+            .toList();
 
         if (!providers.contains('google.com')) {
           throw Exception('Google provider linking verification failed');
@@ -301,7 +309,6 @@ class AuthRepository {
         }
 
         createdUser = updatedUser;
-
       } catch (linkError) {
         if (kDebugMode) {
           print('❌ Google linking failed: $linkError');
@@ -340,7 +347,7 @@ class AuthRepository {
 
         await _firebaseService
             .collection(AppConstants.collectionUsers)
-            .doc(createdUser.uid)  // UID as document ID
+            .doc(createdUser.uid) // UID as document ID
             .set(userModel.toJson());
 
         if (kDebugMode) {
@@ -350,7 +357,6 @@ class AuthRepository {
 
         clearPendingGoogleCredential();
         return userModel;
-
       } catch (firestoreError) {
         if (kDebugMode) {
           print('❌ Firestore creation failed: $firestoreError');
@@ -372,7 +378,6 @@ class AuthRepository {
 
         throw Exception('Failed to create Firestore document: $firestoreError');
       }
-
     } catch (e) {
       // FINAL SAFETY NET: Ensure cleanup happened
       if (createdUser != null) {
@@ -382,7 +387,8 @@ class AuthRepository {
 
         try {
           final currentAuthUser = _firebaseService.auth.currentUser;
-          if (currentAuthUser != null && currentAuthUser.uid == createdUser.uid) {
+          if (currentAuthUser != null &&
+              currentAuthUser.uid == createdUser.uid) {
             await currentAuthUser.delete();
             if (kDebugMode) {
               print('✅ Final cleanup successful');
@@ -391,7 +397,9 @@ class AuthRepository {
         } catch (finalCleanupError) {
           if (kDebugMode) {
             print('⚠️ CRITICAL: Final cleanup failed');
-            print('⚠️ Manual intervention may be required for UID: ${createdUser.uid}');
+            print(
+              '⚠️ Manual intervention may be required for UID: ${createdUser.uid}',
+            );
           }
         }
       }
@@ -412,7 +420,7 @@ class AuthRepository {
     try {
       await _firebaseService
           .collection(AppConstants.collectionUsers)
-          .doc(user.id)  // UID as document ID
+          .doc(user.id) // UID as document ID
           .set(user.toJson());
 
       if (kDebugMode) {
@@ -445,10 +453,7 @@ class AuthRepository {
       }
 
       final userData = userDoc.data() as Map<String, dynamic>?;
-      return UserModel.fromJson({
-        'id': currentFirebaseUser.uid,
-        ...?userData,
-      });
+      return UserModel.fromJson({'id': currentFirebaseUser.uid, ...?userData});
     } catch (e) {
       if (kDebugMode) {
         print('❌ Get current user error: $e');
@@ -462,7 +467,7 @@ class AuthRepository {
     try {
       final userJson = user.toJson();
       final updateData = <String, dynamic>{};
-      
+
       // Handle null values - use FieldValue.delete() to remove fields from Firestore
       for (final entry in userJson.entries) {
         if (entry.value == null) {
@@ -472,13 +477,13 @@ class AuthRepository {
           updateData[entry.key] = entry.value;
         }
       }
-      
+
       // Remove 'id' from update data as it's the document ID, not a field
       updateData.remove('id');
-      
+
       await _firebaseService
           .collection(AppConstants.collectionUsers)
-          .doc(user.id)  // Direct access by UID
+          .doc(user.id) // Direct access by UID
           .update(updateData);
 
       if (kDebugMode) {
@@ -499,9 +504,9 @@ class AuthRepository {
           .collection(AppConstants.collectionUsers)
           .doc(userId)
           .update({
-        fieldName: FieldValue.delete(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            fieldName: FieldValue.delete(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (kDebugMode) {
         print('✅ Deleted field $fieldName from user: $userId');
@@ -579,7 +584,8 @@ class AuthRepository {
         throw Exception('Google re-authentication canceled');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final googleCredential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -601,9 +607,7 @@ class AuthRepository {
 
   /// Re-authenticate user (automatically detects provider)
   /// Throws ReauthenticationRequiredException if re-authentication method is not available
-  Future<void> reauthenticateUser({
-    String? password,
-  }) async {
+  Future<void> reauthenticateUser({String? password}) async {
     try {
       final currentUser = _firebaseService.currentUser;
       if (currentUser == null) {
@@ -617,7 +621,9 @@ class AuthRepository {
         throw Exception('User is null after reload');
       }
 
-      final providers = updatedUser.providerData.map((p) => p.providerId).toList();
+      final providers = updatedUser.providerData
+          .map((p) => p.providerId)
+          .toList();
       final hasPasswordProvider = providers.contains('password');
       final hasGoogleProvider = providers.contains('google.com');
 
@@ -632,16 +638,16 @@ class AuthRepository {
         if (email == null || email.isEmpty) {
           throw ReauthenticationRequiredException(providers);
         }
-        await reauthenticateWithEmailPassword(
-          email: email,
-          password: password,
-        );
+        await reauthenticateWithEmailPassword(email: email, password: password);
       } else if (hasGoogleProvider) {
         // Re-authenticate with Google
         await reauthenticateWithGoogle();
       } else {
         // Need re-authentication but don't know how
-        throw ReauthenticationRequiredException(providers, email: updatedUser.email);
+        throw ReauthenticationRequiredException(
+          providers,
+          email: updatedUser.email,
+        );
       }
     } catch (e) {
       if (e is ReauthenticationRequiredException) {
@@ -679,7 +685,8 @@ class AuthRepository {
         print('📧 Google email: $normalizedEmail');
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final googleCredential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -695,7 +702,8 @@ class AuthRepository {
 
       // Check if user exists in Firestore (our source of truth for registered users)
       final existingUserDoc = await _findUserByEmail(normalizedEmail);
-      final existsInFirestore = existingUserDoc != null && existingUserDoc.exists;
+      final existsInFirestore =
+          existingUserDoc != null && existingUserDoc.exists;
 
       if (kDebugMode) {
         print('🔍 Firestore check - User exists: $existsInFirestore');
@@ -729,13 +737,14 @@ class AuthRepository {
 
       try {
         // Try to sign in with Google
-        userCredential = await _firebaseService.auth.signInWithCredential(googleCredential);
+        userCredential = await _firebaseService.auth.signInWithCredential(
+          googleCredential,
+        );
         firebaseUser = userCredential.user;
 
         if (kDebugMode) {
           print('✅ Google sign-in successful');
         }
-
       } on FirebaseAuthException catch (e) {
         if (kDebugMode) {
           print('⚠️ Google sign-in failed: ${e.code}');
@@ -749,7 +758,7 @@ class AuthRepository {
 
           _pendingGoogleCredential = googleCredential;
           throw Exception(
-              'An account already exists with this email. Please sign in with your email and password. Your Google account will be linked automatically.'
+            'An account already exists with this email. Please sign in with your email and password. Your Google account will be linked automatically.',
           );
         } else {
           rethrow;
@@ -768,7 +777,9 @@ class AuthRepository {
         throw Exception('User null after reload');
       }
 
-      final providers = firebaseUser.providerData.map((p) => p.providerId).toList();
+      final providers = firebaseUser.providerData
+          .map((p) => p.providerId)
+          .toList();
       final hasGoogleProvider = providers.contains('google.com');
       final hasPasswordProvider = providers.contains('password');
 
@@ -812,7 +823,9 @@ class AuthRepository {
       }
 
       if (kDebugMode) {
-        final finalProviders = firebaseUser.providerData.map((p) => p.providerId).toList();
+        final finalProviders = firebaseUser.providerData
+            .map((p) => p.providerId)
+            .toList();
         print('✅ Signed in successfully with providers: $finalProviders');
       }
 
@@ -840,10 +853,7 @@ class AuthRepository {
       }
 
       final userData = userDoc.data() as Map<String, dynamic>?;
-      return UserModel.fromJson({
-        'id': firebaseUser.uid,
-        ...?userData,
-      });
+      return UserModel.fromJson({'id': firebaseUser.uid, ...?userData});
     } on SignupRequiredException {
       rethrow;
     } catch (e) {
@@ -858,7 +868,9 @@ class AuthRepository {
   Future<void> resetPassword(String email) async {
     try {
       final normalizedEmail = _normalizeEmail(email);
-      await _firebaseService.auth.sendPasswordResetEmail(email: normalizedEmail);
+      await _firebaseService.auth.sendPasswordResetEmail(
+        email: normalizedEmail,
+      );
     } catch (e) {
       if (kDebugMode) {
         print('❌ Reset password error: $e');
@@ -884,12 +896,12 @@ class AuthRepository {
           .collection(AppConstants.collectionUsers)
           .doc(userId)
           .update({
-        'age': age,
-        'dateOfBirth': dateOfBirth,
-        'isAgeVerified': true,
-        'ageVerifiedAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'age': age,
+            'dateOfBirth': dateOfBirth,
+            'isAgeVerified': true,
+            'ageVerifiedAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (kDebugMode) {
         print('✅ Age verification updated successfully');
@@ -955,42 +967,54 @@ class AuthRepository {
       }
 
       // Check if all required fields are present (all fields are now strings, not lists)
-      final hasTone = preferences['conversationTone'] != null &&
+      final hasTone =
+          preferences['conversationTone'] != null &&
           (preferences['conversationTone'] is String) &&
           (preferences['conversationTone'] as String).isNotEmpty;
       // Handle topicsToAvoid - can be string (old format) or list (new format)
       final topicsToAvoidValue = preferences['topicsToAvoid'];
-      final hasTopicsToAvoid = topicsToAvoidValue != null &&
+      final hasTopicsToAvoid =
+          topicsToAvoidValue != null &&
           ((topicsToAvoidValue is List && topicsToAvoidValue.isNotEmpty) ||
-           (topicsToAvoidValue is String && topicsToAvoidValue.isNotEmpty));
-      final hasRelationshipStatus = preferences['relationshipStatus'] != null &&
+              (topicsToAvoidValue is String && topicsToAvoidValue.isNotEmpty));
+      final hasRelationshipStatus =
+          preferences['relationshipStatus'] != null &&
           (preferences['relationshipStatus'] is String) &&
           (preferences['relationshipStatus'] as String).isNotEmpty;
-      final hasSupportType = preferences['supportType'] != null &&
+      final hasSupportType =
+          preferences['supportType'] != null &&
           (preferences['supportType'] is String) &&
           (preferences['supportType'] as String).isNotEmpty;
-      final hasSexualOrientation = preferences['sexualOrientation'] != null &&
+      final hasSexualOrientation =
+          preferences['sexualOrientation'] != null &&
           (preferences['sexualOrientation'] is String) &&
           (preferences['sexualOrientation'] as String).isNotEmpty;
-      final hasInterestedIn = preferences['interestedIn'] != null &&
+      final hasInterestedIn =
+          preferences['interestedIn'] != null &&
           (preferences['interestedIn'] is String) &&
           (preferences['interestedIn'] as String).isNotEmpty;
-      final hasAiCommunication = preferences['aiCommunication'] != null &&
+      final hasAiCommunication =
+          preferences['aiCommunication'] != null &&
           (preferences['aiCommunication'] is String) &&
           (preferences['aiCommunication'] as String).isNotEmpty;
-      final hasBiggestChallenge = preferences['biggestChallenge'] != null &&
+      final hasBiggestChallenge =
+          preferences['biggestChallenge'] != null &&
           (preferences['biggestChallenge'] is String) &&
           (preferences['biggestChallenge'] as String).isNotEmpty;
-      final hasTimeDedication = preferences['timeDedication'] != null &&
+      final hasTimeDedication =
+          preferences['timeDedication'] != null &&
           (preferences['timeDedication'] is String) &&
           (preferences['timeDedication'] as String).isNotEmpty;
-      final hasAiToolsFamiliarity = preferences['aiToolsFamiliarity'] != null &&
+      final hasAiToolsFamiliarity =
+          preferences['aiToolsFamiliarity'] != null &&
           (preferences['aiToolsFamiliarity'] is String) &&
           (preferences['aiToolsFamiliarity'] as String).isNotEmpty;
-      final hasStressResponse = preferences['stressResponse'] != null &&
+      final hasStressResponse =
+          preferences['stressResponse'] != null &&
           (preferences['stressResponse'] is String) &&
           (preferences['stressResponse'] as String).isNotEmpty;
-      final hasAiHonesty = preferences['aiHonesty'] != null &&
+      final hasAiHonesty =
+          preferences['aiHonesty'] != null &&
           (preferences['aiHonesty'] is String) &&
           (preferences['aiHonesty'] as String).isNotEmpty;
 
@@ -1025,9 +1049,9 @@ class AuthRepository {
           .collection(AppConstants.collectionUsers)
           .doc(userId)
           .update({
-        'isOnboardingCompleted': true,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'isOnboardingCompleted': true,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       if (kDebugMode) {
         print('✅ Onboarding completion updated successfully');
@@ -1046,8 +1070,9 @@ class AuthRepository {
   /// 2. Profile image from Firebase Storage
   /// 3. User subscriptions from Firestore
   /// 4. User preferences subcollection
-  /// 5. Firestore user document
-  /// 6. Firebase Auth account (may require re-authentication)
+  /// 5. User metadata subcollection
+  /// 6. Firestore user document
+  /// 7. Firebase Auth account (may require re-authentication)
   Future<void> deleteAccount(String userId, {String? password}) async {
     try {
       if (kDebugMode) {
@@ -1098,9 +1123,11 @@ class AuthRepository {
             batch.delete(doc.reference);
           }
           await batch.commit();
-          
+
           if (kDebugMode) {
-            print('✅ Deleted ${subscriptionsSnapshot.docs.length} subscription(s)');
+            print(
+              '✅ Deleted ${subscriptionsSnapshot.docs.length} subscription(s)',
+            );
           }
         }
       } catch (e) {
@@ -1129,7 +1156,40 @@ class AuthRepository {
         // Continue with document deletion even if preferences deletion fails
       }
 
-      // Step 5: Delete Firestore user document (while user is still authenticated)
+      // Step 5: Delete metadata subcollection (while user is still authenticated)
+      try {
+        final metadataRef = _firebaseService
+            .collection(AppConstants.collectionUsers)
+            .doc(userId)
+            .collection('metadata');
+
+        final metadataSnapshot = await metadataRef.get();
+
+        if (metadataSnapshot.docs.isNotEmpty) {
+          final batch = _firebaseService.firestore.batch();
+          for (final doc in metadataSnapshot.docs) {
+            batch.delete(doc.reference);
+          }
+          await batch.commit();
+
+          if (kDebugMode) {
+            print(
+              '✅ Deleted ${metadataSnapshot.docs.length} metadata document(s)',
+            );
+          }
+        } else {
+          if (kDebugMode) {
+            print('ℹ️ No metadata documents found to delete');
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ Error deleting metadata subcollection: $e');
+        }
+        // Continue with document deletion even if metadata deletion fails
+      }
+
+      // Step 6: Delete Firestore user document (while user is still authenticated)
       try {
         await _firebaseService
             .collection(AppConstants.collectionUsers)
@@ -1146,7 +1206,7 @@ class AuthRepository {
         // Continue with Auth deletion even if Firestore fails
       }
 
-      // Step 6: Delete Firebase Auth account (after Firestore operations, may require re-authentication)
+      // Step 7: Delete Firebase Auth account (after Firestore operations, may require re-authentication)
       try {
         // Get fresh user reference
         final userToDelete = _firebaseService.auth.currentUser;
@@ -1156,7 +1216,9 @@ class AuthRepository {
 
         await userToDelete.delete();
         if (kDebugMode) {
-          print('✅ Firebase Auth account deleted (no re-authentication needed)');
+          print(
+            '✅ Firebase Auth account deleted (no re-authentication needed)',
+          );
         }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'requires-recent-login') {
@@ -1176,7 +1238,9 @@ class AuthRepository {
             throw Exception('User is null after reload');
           }
 
-          final providers = updatedUser.providerData.map((p) => p.providerId).toList();
+          final providers = updatedUser.providerData
+              .map((p) => p.providerId)
+              .toList();
           final hasPasswordProvider = providers.contains('password');
           final hasGoogleProvider = providers.contains('google.com');
 
@@ -1196,7 +1260,9 @@ class AuthRepository {
             if (reauthenticatedUser != null) {
               await reauthenticatedUser.delete();
               if (kDebugMode) {
-                print('✅ Firebase Auth account deleted after re-authentication');
+                print(
+                  '✅ Firebase Auth account deleted after re-authentication',
+                );
               }
             }
           } else if (hasGoogleProvider) {
@@ -1207,19 +1273,24 @@ class AuthRepository {
             if (reauthenticatedUser != null) {
               await reauthenticatedUser.delete();
               if (kDebugMode) {
-                print('✅ Firebase Auth account deleted after Google re-authentication');
+                print(
+                  '✅ Firebase Auth account deleted after Google re-authentication',
+                );
               }
             }
           } else {
             // Need re-authentication but method not available
-            throw ReauthenticationRequiredException(providers, email: updatedUser.email);
+            throw ReauthenticationRequiredException(
+              providers,
+              email: updatedUser.email,
+            );
           }
         } else {
           rethrow;
         }
       }
 
-      // Step 7: Sign out from Google if applicable
+      // Step 8: Sign out from Google if applicable
       try {
         final GoogleSignIn googleSignIn = _getGoogleSignIn();
         await googleSignIn.signOut();

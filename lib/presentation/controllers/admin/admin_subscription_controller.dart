@@ -26,8 +26,17 @@ class AdminSubscriptionController extends AdminBaseController {
   // Analytics
   final RxMap<String, dynamic> subscriptionAnalytics = <String, dynamic>{}.obs;
 
-  // User emails map (userId -> email)
-  final RxMap<String, String> userEmails = <String, String>{}.obs;
+  // User info map (userId -> {name, email})
+  final RxMap<String, Map<String, String>> userInfo = <String, Map<String, String>>{}.obs;
+  
+  // Legacy support - keep userEmails for backward compatibility
+  Map<String, String> get userEmails {
+    final Map<String, String> emails = {};
+    userInfo.forEach((userId, info) {
+      emails[userId] = info['email'] ?? userId;
+    });
+    return emails;
+  }
 
   // Stream subscription
   StreamSubscription<List<SubscriptionModel>>? _subscriptionsStreamSubscription;
@@ -100,8 +109,14 @@ class AdminSubscriptionController extends AdminBaseController {
 
               totalSubscriptions.value = subscriptions.length;
               
-              // Load user emails for subscriptions
-              _loadUserEmails(subscriptionList);
+              // Load user info (name and email) for subscriptions
+              // Don't await - let it load in background and update UI reactively
+              // Call it immediately to start fetching
+              _loadUserInfo(subscriptionList).catchError((e) {
+                if (kDebugMode) {
+                  print('Error in _loadUserInfo: $e');
+                }
+              });
               
               setLoading(false);
             },
@@ -208,8 +223,8 @@ class AdminSubscriptionController extends AdminBaseController {
     loadSubscriptions();
   }
 
-  /// Load user emails for subscriptions
-  Future<void> _loadUserEmails(List<SubscriptionModel> subscriptionList) async {
+  /// Load user info (name and email) for subscriptions
+  Future<void> _loadUserInfo(List<SubscriptionModel> subscriptionList) async {
     try {
       // Get unique user IDs
       final uniqueUserIds = subscriptionList
@@ -218,41 +233,90 @@ class AdminSubscriptionController extends AdminBaseController {
           .toSet()
           .toList();
 
-      // Filter out users we already have emails for
+      if (uniqueUserIds.isEmpty) return;
+
+      // Get current userInfo snapshot to check what we already have
+      final currentUserInfo = Map<String, Map<String, String>>.from(userInfo);
+      
+      // Filter out users we already have complete info for
       final userIdsToFetch = uniqueUserIds
-          .where((userId) => !userEmails.containsKey(userId))
+          .where((userId) {
+            final existingInfo = currentUserInfo[userId];
+            // Fetch if we don't have info, or if name/email is missing or is '-'
+            return existingInfo == null || 
+                   existingInfo['name'] == null || 
+                   existingInfo['name'] == '-' ||
+                   existingInfo['email'] == null || 
+                   existingInfo['email'] == '-';
+          })
           .toList();
 
       if (userIdsToFetch.isEmpty) return;
 
-      // Batch fetch user emails
+      // Start with current userInfo to preserve existing data
+      final Map<String, Map<String, String>> newUserInfo = Map.from(currentUserInfo);
+      
+      // Fetch user info in batches and update reactively as we go
       for (final userId in userIdsToFetch) {
         try {
           final user = await _adminService.getUserById(userId);
-          if (user != null && user.email != null) {
-            userEmails[userId] = user.email!;
+          if (user != null && user.name.isNotEmpty) {
+            newUserInfo[userId] = {
+              'name': user.name,
+              'email': user.email ?? '-',
+            };
           } else {
-            // Fallback to userId if email not found
-            userEmails[userId] = userId;
+            // Fallback to '-' if user not found
+            newUserInfo[userId] = {
+              'name': '-',
+              'email': '-',
+            };
           }
+          
+          // Update reactively after each fetch to show data as it loads
+          userInfo.value = Map.from(newUserInfo);
+          userInfo.refresh(); // Ensure reactivity is triggered
         } catch (e) {
           if (kDebugMode) {
-            print('Error fetching user email for $userId: $e');
+            print('Error fetching user info for $userId: $e');
           }
-          // Fallback to userId on error
-          userEmails[userId] = userId;
+          // Fallback to '-' on error
+          newUserInfo[userId] = {
+            'name': '-',
+            'email': '-',
+          };
+          // Update reactively even on error
+          userInfo.value = Map.from(newUserInfo);
+          userInfo.refresh(); // Ensure reactivity is triggered
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error loading user emails: $e');
+        print('Error loading user info: $e');
       }
     }
   }
 
   /// Get user email by userId
   String getUserEmail(String userId) {
-    return userEmails[userId] ?? userId;
+    return userInfo[userId]?['email'] ?? '-';
+  }
+
+  /// Get user name by userId
+  String getUserName(String userId) {
+    return userInfo[userId]?['name'] ?? '-';
+  }
+
+  /// Get user display text (name and email)
+  String getUserDisplayText(String userId) {
+    final info = userInfo[userId];
+    if (info == null) return '-';
+    final name = info['name'] ?? '-';
+    final email = info['email'] ?? '-';
+    if (email == '-' || email == userId) {
+      return name;
+    }
+    return '$name ($email)';
   }
 
   /// Get status badge color

@@ -7,6 +7,7 @@ import 'package:amorra/core/utils/app_responsive/app_responsive.dart';
 import 'package:amorra/core/utils/app_spacing/app_spacing.dart';
 import 'package:amorra/core/utils/app_styles/app_text_styles.dart';
 import 'package:amorra/core/utils/app_texts/app_texts.dart';
+import 'package:amorra/presentation/controllers/chat/chat_controller.dart';
 import 'package:iconsax/iconsax.dart';
 
 /// Chat Daily Limit Info Widget
@@ -64,7 +65,15 @@ class ChatDailyLimitInfo extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () => Get.toNamed(AppRoutes.subscription),
+              onTap: () {
+                try {
+                  final chatController = Get.find<ChatController>();
+                  chatController.navigateToSubscription();
+                } catch (e) {
+                  // Fallback if controller not found
+                  Get.toNamed(AppRoutes.subscription);
+                }
+              },
               child: Text(
                 'Upgrade',
                 style: AppTextStyles.buttonText(context).copyWith(

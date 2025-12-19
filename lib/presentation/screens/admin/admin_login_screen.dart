@@ -14,15 +14,30 @@ import 'package:amorra/core/config/routes.dart';
 
 /// Admin Login Screen
 /// Desktop-optimized login screen for admin dashboard
-class AdminLoginScreen extends GetView<AdminAuthController> {
+class AdminLoginScreen extends StatefulWidget {
   const AdminLoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<AdminLoginScreen> createState() => _AdminLoginScreenState();
+}
+
+class _AdminLoginScreenState extends State<AdminLoginScreen> {
+  late final TextEditingController emailController;
+  late final TextEditingController passwordController;
+  late final AdminAuthController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers once in initState
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+    
     // Ensure controller is initialized
     if (!Get.isRegistered<AdminAuthController>()) {
       Get.put(AdminAuthController());
     }
+    controller = Get.find<AdminAuthController>();
 
     // Check if already authenticated and redirect
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -32,9 +47,18 @@ class AdminLoginScreen extends GetView<AdminAuthController> {
         }
       }
     });
+  }
 
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
+  @override
+  void dispose() {
+    // Dispose controllers when widget is disposed
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
 
     return Scaffold(
       backgroundColor: AppColors.lightGrey.withOpacity(0.3),
@@ -111,13 +135,7 @@ class AdminLoginScreen extends GetView<AdminAuthController> {
                         text: isLoading
                             ? WebTexts.adminSigningIn
                             : WebTexts.adminSignInButton,
-                        onPressed: isLoading
-                            ? null
-                            : () => _handleSignIn(
-                                controller,
-                                emailController.text,
-                                passwordController.text,
-                              ),
+                        onPressed: isLoading ? null : _handleSignIn,
                         isLoading: isLoading,
                       );
                     }),
@@ -131,11 +149,10 @@ class AdminLoginScreen extends GetView<AdminAuthController> {
     );
   }
 
-  void _handleSignIn(
-    AdminAuthController controller,
-    String email,
-    String password,
-  ) {
+  void _handleSignIn() {
+    final email = emailController.text;
+    final password = passwordController.text;
+    
     if (email.isEmpty || password.isEmpty) {
       controller.showError(
         WebTexts.messageValidationError,

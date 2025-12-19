@@ -16,7 +16,7 @@ class SubscriptionList extends StatelessWidget {
   final Function(SubscriptionModel) onViewDetails;
   final Function(SubscriptionModel) onCancel;
   final Function(SubscriptionModel) onReactivate;
-  final Map<String, String> userEmails;
+  final Map<String, Map<String, String>> userInfo;
 
   const SubscriptionList({
     super.key,
@@ -24,7 +24,7 @@ class SubscriptionList extends StatelessWidget {
     required this.onViewDetails,
     required this.onCancel,
     required this.onReactivate,
-    required this.userEmails,
+    required this.userInfo,
   });
 
   @override
@@ -61,7 +61,13 @@ class SubscriptionList extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'User: ${userEmails[subscription.userId] ?? subscription.userId}',
+                          'Name: ${userInfo[subscription.userId]?['name'] ?? '-'}',
+                          style: WebTextStyles.bodyText(context).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Email: ${userInfo[subscription.userId]?['email'] ?? '-'}',
                           style: WebTextStyles.caption(context),
                         ),
                       ],

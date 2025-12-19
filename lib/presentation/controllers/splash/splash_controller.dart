@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get_storage/get_storage.dart';
 import '../base_controller.dart';
 import 'package:amorra/core/config/routes.dart';
@@ -19,8 +20,12 @@ class SplashController extends BaseController {
   @override
   void onInit() {
     super.onInit();
-    _startAnimation();
-    _navigateToNext();
+    // Ensure splash screen is visible before starting navigation
+    // Use addPostFrameCallback to ensure widget is fully rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAnimation();
+      _navigateToNext();
+    });
   }
 
   /// Start logo animation
@@ -36,7 +41,11 @@ class SplashController extends BaseController {
 
   /// Navigate to next screen after delay
   void _navigateToNext() async {
-    Timer(const Duration(seconds: 3), () async {
+    // Ensure minimum splash screen display time (2.5 seconds minimum)
+    // This ensures splash is visible even in fast release builds
+    await Future.delayed(const Duration(milliseconds: 2500));
+    
+    Timer(const Duration(milliseconds: 500), () async {
       try {
         // Check if user is authenticated
         final currentUser = _firebaseService.currentUser;

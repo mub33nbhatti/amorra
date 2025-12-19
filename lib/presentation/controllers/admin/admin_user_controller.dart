@@ -186,16 +186,31 @@ class AdminUserController extends AdminBaseController {
 
   /// Block user
   Future<bool> blockUser(String userId, {String? reason}) async {
+    // Optimistically update the local list for immediate UI feedback
+    final userIndex = users.indexWhere((u) => u.id == userId);
+    bool wasUpdated = false;
+    
+    if (userIndex != -1) {
+      final updatedUser = users[userIndex].copyWith(isBlocked: true);
+      users[userIndex] = updatedUser;
+      users.refresh(); // Ensure reactivity
+      wasUpdated = true;
+    }
+    
     try {
-      setLoading(true);
       await _adminService.blockUser(userId, reason: reason);
-      setLoading(false);
       showSuccess('User blocked successfully');
-      loadUsers(); // Refresh list
+      // Stream subscription will automatically update the list in real-time
+      // The stream update will confirm the optimistic update
       return true;
     } catch (e) {
+      // Revert optimistic update on error
+      if (wasUpdated && userIndex != -1) {
+        final revertedUser = users[userIndex].copyWith(isBlocked: false);
+        users[userIndex] = revertedUser;
+        users.refresh();
+      }
       setError(e.toString());
-      setLoading(false);
       showError('Failed to block user', subtitle: e.toString());
       return false;
     }
@@ -203,16 +218,31 @@ class AdminUserController extends AdminBaseController {
 
   /// Unblock user
   Future<bool> unblockUser(String userId) async {
+    // Optimistically update the local list for immediate UI feedback
+    final userIndex = users.indexWhere((u) => u.id == userId);
+    bool wasUpdated = false;
+    
+    if (userIndex != -1) {
+      final updatedUser = users[userIndex].copyWith(isBlocked: false);
+      users[userIndex] = updatedUser;
+      users.refresh(); // Ensure reactivity
+      wasUpdated = true;
+    }
+    
     try {
-      setLoading(true);
       await _adminService.unblockUser(userId);
-      setLoading(false);
       showSuccess('User unblocked successfully');
-      loadUsers(); // Refresh list
+      // Stream subscription will automatically update the list in real-time
+      // The stream update will confirm the optimistic update
       return true;
     } catch (e) {
+      // Revert optimistic update on error
+      if (wasUpdated && userIndex != -1) {
+        final revertedUser = users[userIndex].copyWith(isBlocked: true);
+        users[userIndex] = revertedUser;
+        users.refresh();
+      }
       setError(e.toString());
-      setLoading(false);
       showError('Failed to unblock user', subtitle: e.toString());
       return false;
     }

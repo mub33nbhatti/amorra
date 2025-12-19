@@ -15,6 +15,8 @@ import 'package:amorra/presentation/controllers/auth/profile_setup/profile_setup
 import 'package:amorra/presentation/widgets/auth/profile_setup/profile_setup_bottom_sheet.dart';
 import 'package:amorra/core/utils/app_colors/app_colors.dart';
 import 'package:amorra/core/utils/app_responsive/app_responsive.dart';
+import 'package:amorra/core/config/routes.dart';
+import 'package:amorra/presentation/controllers/main/main_navigation_controller.dart';
 
 /// Chat Controller
 /// Handles chat interface logic and state
@@ -1124,6 +1126,22 @@ class ChatController extends BaseController {
       ),
       builder: (context) => const ProfileSetupBottomSheet(),
     );
+  }
+
+  /// Navigate to subscription screen
+  /// Uses the same navigation method as ProfileController.navigateToSubscription
+  void navigateToSubscription() {
+    try {
+      // Get MainNavigationController and change to subscription tab (index 2)
+      final mainNavController = Get.find<MainNavigationController>();
+      mainNavController.changeTab(2); // Subscription tab index
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error navigating to subscription: $e');
+      }
+      // Fallback: try to navigate using route
+      Get.toNamed(AppRoutes.subscription);
+    }
   }
 }
 

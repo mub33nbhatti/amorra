@@ -17,7 +17,7 @@ class SubscriptionTable extends StatelessWidget {
   final Function(SubscriptionModel) onViewDetails;
   final Function(SubscriptionModel) onCancel;
   final Function(SubscriptionModel) onReactivate;
-  final Map<String, String> userEmails;
+  final Map<String, Map<String, String>> userInfo;
 
   const SubscriptionTable({
     super.key,
@@ -25,14 +25,20 @@ class SubscriptionTable extends StatelessWidget {
     required this.onViewDetails,
     required this.onCancel,
     required this.onReactivate,
-    required this.userEmails,
+    required this.userInfo,
   });
 
   List<DataColumn> _buildColumns(BuildContext context) {
     return [
       DataColumn(
         label: Text(
-          WebTexts.tableHeaderUser,
+          WebTexts.tableHeaderName,
+          style: WebTextStyles.tableHeader(context),
+        ),
+      ),
+      DataColumn(
+        label: Text(
+          WebTexts.tableHeaderEmail,
           style: WebTextStyles.tableHeader(context),
         ),
       ),
@@ -77,11 +83,24 @@ class SubscriptionTable extends StatelessWidget {
 
   List<DataRow> _buildRows(BuildContext context) {
     return subscriptions.map((subscription) {
+      final userInfoData = userInfo[subscription.userId];
+      final userName = userInfoData?['name'];
+      final userEmail = userInfoData?['email'];
+      
       return DataRow(
         cells: [
           DataCell(
             Text(
-              userEmails[subscription.userId] ?? subscription.userId,
+              userName ?? '-',
+              style: WebTextStyles.tableCell(context).copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          DataCell(
+            Text(
+              userEmail ?? '-',
               style: WebTextStyles.tableCell(context),
               overflow: TextOverflow.ellipsis,
             ),

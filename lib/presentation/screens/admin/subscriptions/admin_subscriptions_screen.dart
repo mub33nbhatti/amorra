@@ -125,9 +125,14 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
         // Subscriptions Table/List (Scrollable)
         Expanded(
           child: Obx(() {
-            // Watch both subscriptions and userEmails for reactivity
+            // Watch both subscriptions and userInfo for reactivity
+            // Accessing userInfo directly ensures Obx watches it
             final subscriptions = controller.subscriptions;
-            final userEmails = controller.userEmails;
+            // Access userInfo map - Obx automatically watches RxMap
+            // Access length first to ensure Obx watches the map
+            final _ = controller.userInfo.length; // Trigger reactivity
+            // Convert to regular map for widgets
+            final userInfo = Map<String, Map<String, String>>.from(controller.userInfo);
 
             if (controller.isLoading.value) {
               return const LoadingState();
@@ -145,7 +150,7 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
               return SingleChildScrollView(
                 child: SubscriptionTable(
                   subscriptions: subscriptions,
-                  userEmails: userEmails,
+                  userInfo: userInfo,
                   onViewDetails: (subscription) =>
                       _showSubscriptionDetails(context, subscription),
                   onCancel: (subscription) =>
@@ -158,7 +163,7 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
               // ListView handles its own scrolling, no need for SingleChildScrollView
               return SubscriptionList(
                 subscriptions: subscriptions,
-                userEmails: userEmails,
+                userInfo: userInfo,
                 onViewDetails: (subscription) =>
                     _showSubscriptionDetails(context, subscription),
                 onCancel: (subscription) =>
@@ -187,9 +192,16 @@ class AdminSubscriptionsScreen extends GetView<AdminSubscriptionController> {
           value: Text(subscription.id, style: WebTextStyles.bodyText(context)),
         ),
         DetailRow(
-          label: WebTexts.subscriptionDetailsUserId,
+          label: WebTexts.userDetailsName,
           value: Text(
-            subscription.userId,
+            controller.getUserName(subscription.userId),
+            style: WebTextStyles.bodyText(context),
+          ),
+        ),
+        DetailRow(
+          label: WebTexts.userDetailsEmail,
+          value: Text(
+            controller.getUserEmail(subscription.userId),
             style: WebTextStyles.bodyText(context),
           ),
         ),
